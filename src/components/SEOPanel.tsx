@@ -719,15 +719,19 @@ function ScraperTab() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<Record<string, unknown> | null>(null);
   const [error, setError] = useState('');
+  const [auditStatus, setAuditStatus] = useState('');
+  const [auditProgress, setAuditProgress] = useState(0);
 
   const handleScrape = async () => {
     if (!url || !activeProject) return;
     setLoading(true);
     setError('');
     setResult(null);
+    setAuditStatus('Starting audit...');
+    setAuditProgress(5);
 
     try {
-      // Scrape
+      // Step 1: Start RankForge audit
       const scrapeRes = await fetch('/api/seo/scrape', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -736,35 +740,71 @@ function ScraperTab() {
       const scrapeData = await scrapeRes.json();
 
       if (!scrapeData.ok) {
-        setError(scrapeData.error || 'Scrape failed');
+        setError(scrapeData.error || 'Failed to start audit');
         setLoading(false);
         return;
       }
 
-      // Analyze
-      const analyzeRes = await fetch('/api/seo/analyze', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(scrapeData),
-      });
-      const analyzeData = await analyzeRes.json();
+      const { auditId } = scrapeData;
+      setAuditStatus('Crawling pages...');
+      setAuditProgress(15);
 
-      if (analyzeData.ok) {
-        addSEORecord(activeProject.id, {
-          url: scrapeData.url,
-          scrapedAt: analyzeData.scrapedAt,
-          score: analyzeData.score,
-          title: analyzeData.title,
-          metaDescription: analyzeData.metaDescription,
-          h1s: analyzeData.h1s || [],
-          wordCount: analyzeData.wordCount,
-          loadTime: scrapeData.loadTime,
-          issues: analyzeData.issues || [],
-          recommendations: analyzeData.recommendations || [],
-        });
-        setProjectScore(activeProject.id, analyzeData.score);
-        setResult(analyzeData);
-      }
+      // Step 2: Poll until done
+      const poll = async (): Promise<Record<string, unknown>> => {
+        for (let i = 0; i < 60; i++) { // max 60 polls × 3s = 3min
+          await new Promise(r => setTimeout(r, 3000));
+
+          const statusRes = await fetch(`/api/seo/audit/${auditId}?auditId=${auditId}`);
+          const statusData = await statusRes.json();
+
+          if (!statusData.ok) {
+            throw new Error(statusData.error || 'Poll failed');
+          }
+
+          const progress = statusData.progress || 0;
+          setAuditProgress(progress);
+
+          if (statusData.status === 'done') {
+            return statusData;
+          }
+
+          if (statusData.status === 'error') {
+            throw new Error('Audit failed: ' + (statusData.error || 'unknown'));
+          }
+
+          if (statusData.status === 'crawling') setAuditStatus(`Scanning ${statusData.pagesFound || 0} pages...`);
+          else if (statusData.status === 'analyzing') setAuditStatus('Analyzing content...');
+        }
+        throw new Error('Audit timed out');
+      };
+
+      const auditData = await poll();
+      setAuditStatus('Finalizing...');
+      setAuditProgress(95);
+
+      // Step 3: Add record to project
+      const firstPage = (auditData.pages as Array<{
+        url: string; title?: string; metaDescription?: string; h1?: string;
+        wordCount?: number; score?: number; issues?: unknown[];
+      }>)?.[0];
+
+      addSEORecord(activeProject.id, {
+        url: firstPage?.url || url,
+        scrapedAt: Date.now(),
+        score: Number(auditData.score) || 0,
+        title: firstPage?.title || '',
+        metaDescription: firstPage?.metaDescription || '',
+        h1s: firstPage?.h1 ? [firstPage.h1] : [],
+        wordCount: firstPage?.wordCount || 0,
+        loadTime: undefined,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        issues: (firstPage?.issues || []) as any as import('@/lib/store').SEOIssue[],
+        recommendations: [],
+      });
+      setProjectScore(activeProject.id, Number(auditData.score) || 0);
+      setResult(auditData);
+      setAuditStatus('Done!');
+      setAuditProgress(100);
     } catch (e) {
       setError(String(e));
     }
@@ -787,9 +827,25 @@ function ScraperTab() {
           className="px-4 py-2.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-sm rounded-lg transition-colors flex items-center gap-2"
         >
           {loading ? <span className="animate-spin">⟳</span> : <span>🕷️</span>}
-          {loading ? 'Scraping...' : 'Scrape'}
+          {loading ? 'Auditing...' : 'Audit'}
         </button>
       </div>
+
+      {/* Audit progress */}
+      {loading && auditProgress > 0 && (
+        <div className="space-y-1">
+          <div className="flex justify-between text-xs text-gray-400">
+            <span>{auditStatus}</span>
+            <span>{auditProgress}%</span>
+          </div>
+          <div className="w-full bg-white/10 rounded-full h-1.5">
+            <div
+              className="bg-blue-500 h-1.5 rounded-full transition-all duration-300"
+              style={{ width: `${auditProgress}%` }}
+            />
+          </div>
+        </div>
+      )}
 
       {error && (
         <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 text-xs text-red-400">
