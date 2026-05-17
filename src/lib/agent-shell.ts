@@ -3,9 +3,10 @@
  * Only import this from API routes — never from client components
  */
 
+import { spawn } from 'child_process';
+
 export function runShellCommand(cmd: string, args: string[], timeout = 10000): Promise<{ stdout: string; stderr: string; exitCode: number }> {
   return new Promise((resolve) => {
-    const { spawn } = require('child_process');
     const proc = spawn(cmd, args, { shell: true, timeout });
     let stdout = '';
     let stderr = '';
