@@ -3,12 +3,31 @@
 import { useStore } from '@/lib/store';
 import { MessageSquare, Plus, Trash2, Clock, Hash } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
+import { useEffect, useState } from 'react';
 
 const AGENT_COLORS = {
   hermes: 'var(--color-hermes)',
   openclaw: 'var(--color-openclaw)',
   claude: 'var(--color-claude)',
 };
+
+function RelativeTime({ date }: { date: Date | number }) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return <span suppressHydrationWarning>...</span>;
+  }
+
+  return (
+    <span suppressHydrationWarning suppressContentEditableWarning>
+      {formatDistanceToNow(date, { addSuffix: true })}
+    </span>
+  );
+}
 
 export default function SessionsPanel() {
   const { sessions, activeSessionId, setActiveSession, addSession, removeSession } = useStore();
@@ -71,7 +90,7 @@ export default function SessionsPanel() {
                 <div className="flex items-center gap-3 text-xs" style={{ color: 'var(--color-muted)' }}>
                   <span className="flex items-center gap-1">
                     <Clock size={10} />
-                    {formatDistanceToNow(s.updatedAt, { addSuffix: true })}
+                    <RelativeTime date={s.updatedAt} />
                   </span>
                   <span className="flex items-center gap-1">
                     <Hash size={10} />
@@ -121,8 +140,8 @@ export default function SessionsPanel() {
                       { label: 'Agent', value: s.agentType.toUpperCase() },
                       { label: 'Messages', value: String(s.messageCount) },
                       { label: 'Status', value: s.status },
-                      { label: 'Created', value: formatDistanceToNow(s.createdAt, { addSuffix: true }) },
-                      { label: 'Last Update', value: formatDistanceToNow(s.updatedAt, { addSuffix: true }) },
+                      { label: 'Created', value: <RelativeTime date={s.createdAt} /> },
+                      { label: 'Last Update', value: <RelativeTime date={s.updatedAt} /> },
                       { label: 'Session ID', value: s.id },
                     ].map(({ label, value }) => (
                       <div key={label} className="p-3 rounded-lg" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
