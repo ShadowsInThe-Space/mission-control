@@ -1,9 +1,42 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useStore } from '@/lib/store';
 
 type Tab = 'overview' | 'projects' | 'keywords' | 'content' | 'scraper';
+
+// ─── Tooltip Component ─────────────────────────────────────────────────────────
+
+function TooltipIcon({ tip }: { tip: string }) {
+  const [show, setShow] = useState(false);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const showTip = () => {
+    timer.current = setTimeout(() => setShow(true), 400);
+  };
+  const hideTip = () => {
+    if (timer.current) clearTimeout(timer.current);
+    setShow(false);
+  };
+
+  return (
+    <span className="relative inline-flex items-center ml-1 cursor-help">
+      <span
+        onMouseEnter={showTip}
+        onMouseLeave={hideTip}
+        className="text-gray-500 hover:text-gray-300 text-[11px] select-none"
+      >
+        ⓘ
+      </span>
+      {show && (
+        <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 bg-gray-900 border border-white/20 text-gray-200 text-xs rounded-lg px-3 py-2 shadow-xl z-50 pointer-events-none whitespace-pre-line">
+          {tip}
+          <span className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-900" />
+        </span>
+      )}
+    </span>
+  );
+}
 
 export default function SEOPanel() {
   const { seoProjects, activeProjectId, setActiveProject } = useStore();
@@ -11,12 +44,12 @@ export default function SEOPanel() {
 
   const activeProject = seoProjects.find((p) => p.id === activeProjectId);
 
-  const tabs: { id: Tab; label: string }[] = [
-    { id: 'overview', label: '📊 Overview' },
-    { id: 'projects', label: '🏗️ Projects' },
-    { id: 'keywords', label: '🔑 Keywords' },
-    { id: 'content', label: '✍️ Content' },
-    { id: 'scraper', label: '🕷️ Scraper' },
+  const tabs: { id: Tab; label: string; tip: string }[] = [
+    { id: 'overview', label: '📊 Overview', tip: 'Zusammenfassung aller SEO-Projekte mit Score-Übersicht' },
+    { id: 'projects', label: '🏗️ Projects', tip: 'SEO-Projekte verwalten — je Projekt: URL, Keywords, Content, Scan-Historie' },
+    { id: 'keywords', label: '🔑 Keywords', tip: 'Keywords tracken mit Volumen, Difficulty, Rank-Trend | 💡 Hermes schlägt neue Keywords vor' },
+    { id: 'content', label: '✍️ Content', tip: 'Blog, Newsletter, Social Media via Hermes Agent generieren — SEO-optimiert' },
+    { id: 'scraper', label: '🕷️ Scraper', tip: 'Website mit Firecrawl scrapen → SEO-Score, Issues, Empfehlungen' },
   ];
 
   return (
@@ -24,7 +57,10 @@ export default function SEOPanel() {
       {/* Header */}
       <div className="px-4 py-3 border-b border-white/10 flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-bold text-white">SEO / GEO Control</h2>
+          <h2 className="text-lg font-bold text-white">
+            SEO / GEO Control
+            <TooltipIcon tip="SEO = Suchmaschinen-Optimierung (RANKING verbessern) | GEO = Generative Engine Optimierung (KI-Suchefinden dich)beide zusammen = maximale Sichtbarkeit in klassischen + KI-Suchen" />
+          </h2>
           <p className="text-xs text-gray-400">
             {seoProjects.length} Projects · {activeProject?.overallScore ?? 0}% Score
           </p>
@@ -50,13 +86,14 @@ export default function SEOPanel() {
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`px-4 py-2 text-sm whitespace-nowrap border-b-2 transition-colors ${
+            className={`px-4 py-2 text-sm whitespace-nowrap border-b-2 transition-colors flex items-center gap-1 ${
               activeTab === tab.id
                 ? 'border-blue-500 text-blue-400'
                 : 'border-transparent text-gray-400 hover:text-white'
             }`}
           >
-            {tab.label}
+            <span>{tab.label}</span>
+            <TooltipIcon tip={tab.tip} />
           </button>
         ))}
       </div>
@@ -97,10 +134,10 @@ function OverviewTab() {
     <div className="p-4 space-y-4">
       {/* Score Cards */}
       <div className="grid grid-cols-2 gap-3">
-        <ScoreCard label="Avg Score" value={`${avgScore}%`} color={avgScore > 70 ? 'green' : avgScore > 40 ? 'yellow' : 'red'} />
-        <ScoreCard label="Projects" value={seoProjects.length.toString()} />
-        <ScoreCard label="Keywords" value={totalKeywords.toString()} />
-        <ScoreCard label="Content" value={totalContent.toString()} />
+        <ScoreCard label="Avg Score" value={`${avgScore}%`} color={avgScore > 70 ? 'green' : avgScore > 40 ? 'yellow' : 'red'} tip="Durchschnittlicher SEO-Score über alle Projekte. >70% = gut, 40-70% = mittel, <40% = kritisch" />
+        <ScoreCard label="Projects" value={seoProjects.length.toString()} tip="Anzahl verwalteter SEO-Projekte. Je Projekt eigene Keywords, Content-Bibliothek und Scan-Historie" />
+        <ScoreCard label="Keywords" value={totalKeywords.toString()} tip="Alle getrackten Keywords über alle Projekte. Volumen, Difficulty & Rank werden pro Keyword überwacht" />
+        <ScoreCard label="Content" value={totalContent.toString()} tip="Generierte Inhalte: Blog-Artikel, Newsletter, Social Posts. Status: generating → ready → published" />
       </div>
 
       {/* Project list */}
@@ -114,11 +151,14 @@ function OverviewTab() {
   );
 }
 
-function ScoreCard({ label, value, color }: { label: string; value: string; color?: 'green' | 'yellow' | 'red' }) {
+function ScoreCard({ label, value, color, tip }: { label: string; value: string; color?: 'green' | 'yellow' | 'red'; tip?: string }) {
   const colorClass = color === 'green' ? 'text-green-400' : color === 'yellow' ? 'text-yellow-400' : color === 'red' ? 'text-red-400' : 'text-white';
   return (
     <div className="bg-white/5 rounded-lg p-3">
-      <div className="text-xs text-gray-400 mb-1">{label}</div>
+      <div className="flex items-center gap-1 text-xs text-gray-400 mb-1">
+        {label}
+        {tip && <TooltipIcon tip={tip} />}
+      </div>
       <div className={`text-xl font-bold font-mono ${colorClass}`}>{value}</div>
     </div>
   );
@@ -324,7 +364,10 @@ function KeywordsTab() {
     <div className="p-4 space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-sm font-medium text-white">{activeProject.name} — Keywords</h3>
+          <div className="flex items-center gap-1 text-sm font-medium text-white">
+            {activeProject.name} — Keywords
+            <TooltipIcon tip="Trage Keywords manuell ein oder lass dir per KI neue vorschlagen. Volumen = monatl. Suchen, Difficulty = wie schwer zu ranken" />
+          </div>
           <div className="text-xs text-gray-500 mt-0.5">
             {trendingUp > 0 && <span className="text-green-400">↑ {trendingUp} up</span>}
             {trendingDown > 0 && <span className="text-red-400 ml-2">↓ {trendingDown} down</span>}
@@ -334,9 +377,11 @@ function KeywordsTab() {
           <button
             onClick={handleSuggest}
             disabled={loading}
-            className="px-3 py-1.5 bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-white text-xs rounded-lg transition-colors"
+            className="px-3 py-1.5 bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-white text-xs rounded-lg transition-colors flex items-center gap-1"
           >
-            {loading ? '...' : '💡 Suggest'}
+            {loading ? '...' : '💡'}
+            Suggest
+            <TooltipIcon tip="Hermes AI schlägt basierend auf deinen existierenden Keywords 10 verwandte Keywords vor — Volumen, Difficulty & Intent inklusive" />
           </button>
           <button
             onClick={() => setShowAdd(!showAdd)}
@@ -422,15 +467,26 @@ function KeywordRow({ keyword, projectId }: { keyword: ReturnType<typeof useStor
         <span className={`text-xs ${statusColor}`}>{keyword.status}</span>
       </div>
       <div className="flex items-center gap-4">
-        {keyword.volume && <span className="text-xs text-gray-500">{keyword.volume.toLocaleString()}/mo</span>}
+        {keyword.volume && (
+          <span className="flex items-center gap-1 text-xs text-gray-500">
+            {keyword.volume.toLocaleString()}/mo
+            <TooltipIcon tip="Monatliche Suchanfragen in Google (geschätzt). Höheres Volumen = mehr Potential aber oft mehr Wettbewerb" />
+          </span>
+        )}
         {keyword.difficulty && (
-          <span className={`text-xs font-mono ${
+          <span className={`flex items-center gap-1 text-xs font-mono ${
             keyword.difficulty > 70 ? 'text-red-400' : keyword.difficulty > 40 ? 'text-yellow-400' : 'text-green-400'
           }`}>
             {keyword.difficulty}
+            <TooltipIcon tip="Wie schwer es ist, für dieses Keyword zu ranken (0-100). >70 = sehr schwer, 40-70 = mittel, <40 = leicht zu ranken" />
           </span>
         )}
-        {keyword.rank && <span className="text-xs text-gray-400">#{keyword.rank}</span>}
+        {keyword.rank && (
+          <span className="flex items-center gap-1 text-xs text-gray-400">
+            #{keyword.rank}
+            <TooltipIcon tip="Aktuelle Google-Ranking-Position für dieses Keyword. Niedriger = besser (Pos. 1-10 = erste Seite)" />
+          </span>
+        )}
         <button
           onClick={() => removeKeyword(projectId, keyword.id)}
           className="text-gray-600 hover:text-red-400 text-xs"
