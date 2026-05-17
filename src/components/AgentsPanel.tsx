@@ -56,8 +56,9 @@ export default function AgentsPanel() {
   }
 
   useEffect(() => {
-    refresh();
-    const interval = setInterval(refresh, 30000);
+    const tick = () => setTimeout(() => refresh(), 0);
+    tick();
+    const interval = setInterval(tick, 30000);
     return () => clearInterval(interval);
   }, []);
 
