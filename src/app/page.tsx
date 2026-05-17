@@ -6,6 +6,7 @@ import SessionsPanel from '@/components/SessionsPanel';
 import KanbanBoard from '@/components/KanbanBoard';
 import LogsPanel from '@/components/LogsPanel';
 import AgentsPanel from '@/components/AgentsPanel';
+import SEOPanel from '@/components/SEOPanel';
 
 export default function Home() {
   const { activeView } = useStore();
@@ -17,6 +18,7 @@ export default function Home() {
         {activeView === 'sessions' && <SessionsPanel />}
         {activeView === 'kanban' && <KanbanBoard />}
         {activeView === 'logs' && <LogsPanel />}
+        {activeView === 'seo' && <SEOPanel />}
         {activeView === 'agents' && <AgentsPanel />}
       </main>
     </div>

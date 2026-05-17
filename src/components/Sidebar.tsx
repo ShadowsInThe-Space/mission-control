@@ -5,6 +5,7 @@ import {
   MessageSquare,
   Kanban,
   ScrollText,
+  Search,
   Cpu,
   ChevronLeft,
   ChevronRight,
@@ -15,6 +16,7 @@ const NAV_ITEMS = [
   { id: 'sessions' as const, icon: MessageSquare, label: 'Sessions' },
   { id: 'kanban' as const, icon: Kanban, label: 'Kanban' },
   { id: 'logs' as const, icon: ScrollText, label: 'Logs' },
+  { id: 'seo' as const, icon: Search, label: 'SEO / GEO' },
   { id: 'agents' as const, icon: Cpu, label: 'Agents' },
 ];
 

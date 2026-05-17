@@ -3,6 +3,86 @@ import { create } from 'zustand';
 export type AgentType = 'hermes' | 'openclaw' | 'claude';
 export type TaskStatus = 'backlog' | 'in-progress' | 'review' | 'done';
 
+// ─── SEO/GEO Types ────────────────────────────────────────────────────────────
+
+export type KeywordStatus = 'tracking' | 'updating' | 'declining' | 'new';
+export type ContentType = 'blog' | 'newsletter' | 'social' | 'landing';
+export type ContentStatus = 'draft' | 'generating' | 'ready' | 'published';
+export type SEOScore = { score: number; breakdown: Record<string, number> };
+
+export interface SEOProject {
+  id: string;
+  name: string;
+  url: string;
+  description: string;
+  createdAt: number;
+  updatedAt: number;
+  keywords: Keyword[];
+  contents: GeneratedContent[];
+  seoRecords: SEORecord[];
+  overallScore: number;
+}
+
+export interface Keyword {
+  id: string;
+  term: string;
+  volume?: number;       // monthly searches
+  difficulty?: number;   // 0-100
+  cpc?: number;          // in EUR
+  status: KeywordStatus;
+  trend: 'up' | 'down' | 'stable';
+  rank?: number;         // current ranking position
+  previousRank?: number;
+  updatedAt: number;
+}
+
+export interface SEORecord {
+  id: string;
+  projectId: string;
+  url: string;
+  scrapedAt: number;
+  score: number;
+  title?: string;
+  metaDescription?: string;
+  h1s: string[];
+  wordCount?: number;
+  internalLinks?: number;
+  externalLinks?: number;
+  images?: number;
+  missingAlt?: number;
+  loadTime?: number;
+  issues: SEOIssue[];
+  recommendations: SEORecommendation[];
+}
+
+export interface SEOIssue {
+  severity: 'critical' | 'warning' | 'info';
+  code: string;           // e.g. 'H1_MISSING', 'NO_META_DESC'
+  message: string;
+  element?: string;
+}
+
+export interface SEORecommendation {
+  priority: 'high' | 'medium' | 'low';
+  category: string;
+  action: string;
+  impact: string;
+}
+
+export interface GeneratedContent {
+  id: string;
+  keywordId: string;
+  type: ContentType;
+  title: string;
+  content?: string;
+  status: ContentStatus;
+  createdAt: number;
+  updatedAt: number;
+  wordCount?: number;
+  tone?: string;
+  cta?: string;
+}
+
 export interface Task {
   id: string;
   title: string;
@@ -43,7 +123,7 @@ export interface LogEntry {
 
 interface AppState {
   // UI
-  activeView: 'sessions' | 'kanban' | 'logs' | 'agents';
+  activeView: 'sessions' | 'kanban' | 'logs' | 'seo' | 'agents';
   sidebarCollapsed: boolean;
   setActiveView: (v: AppState['activeView']) => void;
   toggleSidebar: () => void;
@@ -69,6 +149,22 @@ interface AppState {
   logs: LogEntry[];
   addLog: (e: Omit<LogEntry, 'id' | 'timestamp'>) => void;
   clearLogs: () => void;
+
+  // SEO/GEO
+  seoProjects: SEOProject[];
+  activeProjectId: string | null;
+  addProject: (p: Omit<SEOProject, 'id' | 'createdAt' | 'updatedAt' | 'keywords' | 'contents' | 'seoRecords' | 'overallScore'>) => void;
+  updateProject: (id: string, updates: Partial<SEOProject>) => void;
+  removeProject: (id: string) => void;
+  setActiveProject: (id: string | null) => void;
+  addKeyword: (projectId: string, kw: Omit<Keyword, 'id' | 'updatedAt'>) => void;
+  updateKeyword: (projectId: string, keywordId: string, updates: Partial<Keyword>) => void;
+  removeKeyword: (projectId: string, keywordId: string) => void;
+  addSEORecord: (projectId: string, record: Omit<SEORecord, 'id' | 'projectId'>) => void;
+  addContent: (projectId: string, content: Omit<GeneratedContent, 'id' | 'createdAt' | 'updatedAt'>) => void;
+  updateContent: (projectId: string, contentId: string, updates: Partial<GeneratedContent>) => void;
+  removeContent: (projectId: string, contentId: string) => void;
+  setProjectScore: (projectId: string, score: number) => void;
 }
 
 let taskCounter = 6;
@@ -327,4 +423,137 @@ export const useStore = create<AppState>((set) => ({
       ].slice(0, 500),
     })),
   clearLogs: () => set({ logs: [] }),
+
+  // SEO/GEO
+  seoProjects: [],
+  activeProjectId: null,
+
+  addProject: (p) =>
+    set((st) => ({
+      seoProjects: [
+        ...st.seoProjects,
+        {
+          ...p,
+          id: `proj_${Date.now()}`,
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+          keywords: [],
+          contents: [],
+          seoRecords: [],
+          overallScore: 0,
+        },
+      ],
+    })),
+
+  updateProject: (id, updates) =>
+    set((st) => ({
+      seoProjects: st.seoProjects.map((p) =>
+        p.id === id ? { ...p, ...updates, updatedAt: Date.now() } : p
+      ),
+    })),
+
+  removeProject: (id) =>
+    set((st) => ({
+      seoProjects: st.seoProjects.filter((p) => p.id !== id),
+      activeProjectId: st.activeProjectId === id ? null : st.activeProjectId,
+    })),
+
+  setActiveProject: (id) => set({ activeProjectId: id }),
+
+  addKeyword: (projectId, kw) =>
+    set((st) => ({
+      seoProjects: st.seoProjects.map((p) =>
+        p.id === projectId
+          ? {
+              ...p,
+              keywords: [...p.keywords, { ...kw, id: `kw_${Date.now()}`, updatedAt: Date.now() }],
+              updatedAt: Date.now(),
+            }
+          : p
+      ),
+    })),
+
+  updateKeyword: (projectId, keywordId, updates) =>
+    set((st) => ({
+      seoProjects: st.seoProjects.map((p) =>
+        p.id === projectId
+          ? {
+              ...p,
+              keywords: p.keywords.map((k) =>
+                k.id === keywordId ? { ...k, ...updates, updatedAt: Date.now() } : k
+              ),
+              updatedAt: Date.now(),
+            }
+          : p
+      ),
+    })),
+
+  removeKeyword: (projectId, keywordId) =>
+    set((st) => ({
+      seoProjects: st.seoProjects.map((p) =>
+        p.id === projectId
+          ? { ...p, keywords: p.keywords.filter((k) => k.id !== keywordId), updatedAt: Date.now() }
+          : p
+      ),
+    })),
+
+  addSEORecord: (projectId, record) =>
+    set((st) => ({
+      seoProjects: st.seoProjects.map((p) =>
+        p.id === projectId
+          ? {
+              ...p,
+              seoRecords: [{ ...record, id: `seo_${Date.now()}`, projectId }, ...p.seoRecords].slice(0, 50),
+              updatedAt: Date.now(),
+            }
+          : p
+      ),
+    })),
+
+  addContent: (projectId, content) =>
+    set((st) => ({
+      seoProjects: st.seoProjects.map((p) =>
+        p.id === projectId
+          ? {
+              ...p,
+              contents: [
+                ...p.contents,
+                { ...content, id: `cnt_${Date.now()}`, createdAt: Date.now(), updatedAt: Date.now() },
+              ],
+              updatedAt: Date.now(),
+            }
+          : p
+      ),
+    })),
+
+  updateContent: (projectId, contentId, updates) =>
+    set((st) => ({
+      seoProjects: st.seoProjects.map((p) =>
+        p.id === projectId
+          ? {
+              ...p,
+              contents: p.contents.map((c) =>
+                c.id === contentId ? { ...c, ...updates, updatedAt: Date.now() } : c
+              ),
+              updatedAt: Date.now(),
+            }
+          : p
+      ),
+    })),
+
+  removeContent: (projectId, contentId) =>
+    set((st) => ({
+      seoProjects: st.seoProjects.map((p) =>
+        p.id === projectId
+          ? { ...p, contents: p.contents.filter((c) => c.id !== contentId), updatedAt: Date.now() }
+          : p
+      ),
+    })),
+
+  setProjectScore: (projectId, score) =>
+    set((st) => ({
+      seoProjects: st.seoProjects.map((p) =>
+        p.id === projectId ? { ...p, overallScore: score, updatedAt: Date.now() } : p
+      ),
+    })),
 }));
