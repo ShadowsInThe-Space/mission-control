@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { useStore, type Task, type TaskStatus } from '@/lib/store';
+import { useState, useEffect } from 'react';
+import { useStore, type Task, type TaskStatus, type AgentType } from '@/lib/store';
 import {
   DndContext,
   closestCenter,
@@ -18,7 +18,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Plus, Trash2, GripVertical, AlertCircle, ArrowUp, ArrowDown } from 'lucide-react';
+import { Plus, Trash2, GripVertical, AlertCircle, X } from 'lucide-react';
 
 const COLUMNS: { id: TaskStatus; label: string; color: string }[] = [
   { id: 'backlog', label: 'Backlog', color: 'var(--color-muted)' },
@@ -27,6 +27,8 @@ const COLUMNS: { id: TaskStatus; label: string; color: string }[] = [
   { id: 'done', label: 'Done', color: 'var(--color-success)' },
 ];
 
+const PRIORITIES: Task['priority'][] = ['low', 'medium', 'high', 'critical'];
+const AGENTS: AgentType[] = ['hermes', 'openclaw', 'claude'];
 const PRIORITY_COLORS = {
   low: 'var(--color-muted)',
   medium: 'var(--color-warning)',
@@ -85,9 +87,154 @@ function TaskCard({ task, onDelete }: { task: Task; onDelete: () => void }) {
   );
 }
 
+interface TaskForm {
+  title: string;
+  description: string;
+  priority: Task['priority'];
+  assignee: AgentType | '';
+  status: TaskStatus;
+}
+
+function TaskModal({ onClose }: { onClose: () => void }) {
+  const { addTask } = useStore();
+  const [form, setForm] = useState<TaskForm>({
+    title: '',
+    description: '',
+    priority: 'medium',
+    assignee: '',
+    status: 'backlog',
+  });
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [onClose]);
+
+  function handleSubmit() {
+    if (!form.title.trim()) return;
+    addTask({
+      title: form.title.trim(),
+      description: form.description.trim(),
+      priority: form.priority,
+      assignee: form.assignee as AgentType | undefined,
+      status: form.status,
+    });
+    onClose();
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+      <div
+        className="relative w-full max-w-md rounded-2xl p-6 shadow-2xl"
+        style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}
+      >
+        <div className="flex items-center justify-between mb-5">
+          <h2 className="text-base font-semibold" style={{ color: 'var(--color-foreground)' }}>New Task</h2>
+          <button onClick={onClose} className="p-1.5 rounded-lg transition-colors hover:bg-opacity-10" style={{ color: 'var(--color-muted)' }}>
+            <X size={16} />
+          </button>
+        </div>
+
+        <div className="space-y-4">
+          <div>
+            <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--color-muted)' }}>Title *</label>
+            <input
+              autoFocus
+              className="w-full px-3 py-2 rounded-lg text-sm outline-none transition-colors"
+              style={{ background: 'var(--color-surface-hover)', color: 'var(--color-foreground)', border: '1px solid var(--color-border)' }}
+              placeholder="What needs to be done?"
+              value={form.title}
+              onChange={(e) => setForm({ ...form, title: e.target.value })}
+              onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--color-muted)' }}>Description</label>
+            <textarea
+              className="w-full px-3 py-2 rounded-lg text-sm outline-none resize-none transition-colors"
+              style={{ background: 'var(--color-surface-hover)', color: 'var(--color-foreground)', border: '1px solid var(--color-border)', minHeight: '80px' }}
+              placeholder="Optional details..."
+              value={form.description}
+              onChange={(e) => setForm({ ...form, description: e.target.value })}
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--color-muted)' }}>Priority</label>
+              <div className="flex flex-col gap-1">
+                {PRIORITIES.map((p) => (
+                  <label key={p} className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="priority"
+                      value={p}
+                      checked={form.priority === p}
+                      onChange={() => setForm({ ...form, priority: p })}
+                      className="accent-violet-500"
+                    />
+                    <span className="text-xs capitalize" style={{ color: PRIORITY_COLORS[p] }}>{p}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--color-muted)' }}>Assignee</label>
+                <select
+                  className="w-full px-2 py-1.5 rounded-lg text-xs outline-none"
+                  style={{ background: 'var(--color-surface-hover)', color: 'var(--color-foreground)', border: '1px solid var(--color-border)' }}
+                  value={form.assignee}
+                  onChange={(e) => setForm({ ...form, assignee: e.target.value as AgentType | '' })}
+                >
+                  <option value="">Unassigned</option>
+                  {AGENTS.map((a) => <option key={a} value={a} className="capitalize">{a}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--color-muted)' }}>Status</label>
+                <select
+                  className="w-full px-2 py-1.5 rounded-lg text-xs outline-none"
+                  style={{ background: 'var(--color-surface-hover)', color: 'var(--color-foreground)', border: '1px solid var(--color-border)' }}
+                  value={form.status}
+                  onChange={(e) => setForm({ ...form, status: e.target.value as TaskStatus })}
+                >
+                  {COLUMNS.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex justify-end gap-2 mt-6">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+            style={{ color: 'var(--color-muted)' }}
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSubmit}
+            disabled={!form.title.trim()}
+            className="px-4 py-2 rounded-lg text-sm font-medium transition-opacity disabled:opacity-40"
+            style={{ background: 'var(--color-accent)', color: '#fff' }}
+          >
+            Create Task
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function KanbanBoard() {
   const { tasks, addTask, moveTask, removeTask } = useStore();
-  const [newTitle, setNewTitle] = useState<Record<string, string>>({});
+  const [showModal, setShowModal] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -99,11 +246,9 @@ export default function KanbanBoard() {
     if (!over) return;
     const taskId = active.id as string;
     const overId = over.id as string;
-    // Dropped over a column
     if (COLUMNS.some((c) => c.id === overId)) {
       moveTask(taskId, overId as TaskStatus);
     } else {
-      // Dropped over another task — find its column
       const targetTask = tasks.find((t) => t.id === overId);
       if (targetTask) moveTask(taskId, targetTask.status);
     }
@@ -111,21 +256,13 @@ export default function KanbanBoard() {
 
   return (
     <div className="flex-1 flex flex-col h-full overflow-hidden">
-      {/* Header */}
       <div className="flex items-center justify-between px-6 py-4 border-b" style={{ borderColor: 'var(--color-border)' }}>
         <div>
           <h1 className="text-base font-semibold" style={{ color: 'var(--color-foreground)' }}>Kanban Board</h1>
           <p className="text-xs mt-0.5" style={{ color: 'var(--color-muted)' }}>{tasks.length} tasks across {COLUMNS.length} columns</p>
         </div>
         <button
-          onClick={() => {
-            addTask({
-              title: 'New Task',
-              description: '',
-              status: 'backlog',
-              priority: 'medium',
-            });
-          }}
+          onClick={() => setShowModal(true)}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-opacity"
           style={{ background: 'var(--color-accent)', color: '#fff' }}
         >
@@ -133,7 +270,6 @@ export default function KanbanBoard() {
         </button>
       </div>
 
-      {/* Columns */}
       <div className="flex-1 overflow-x-auto">
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
           <div className="flex gap-4 p-4 h-full" style={{ minWidth: 'max-content' }}>
@@ -141,7 +277,6 @@ export default function KanbanBoard() {
               const colTasks = tasks.filter((t) => t.status === col.id);
               return (
                 <div key={col.id} className="flex flex-col w-72 flex-shrink-0">
-                  {/* Column header */}
                   <div className="flex items-center justify-between mb-3 px-1">
                     <div className="flex items-center gap-2">
                       <div className="w-2 h-2 rounded-full" style={{ background: col.color }} />
@@ -151,8 +286,6 @@ export default function KanbanBoard() {
                       </span>
                     </div>
                   </div>
-
-                  {/* Droppable area */}
                   <SortableContext items={colTasks.map((t) => t.id)} strategy={verticalListSortingStrategy}>
                     <div
                       className="flex-1 rounded-xl p-2 overflow-y-auto transition-colors"
@@ -176,6 +309,8 @@ export default function KanbanBoard() {
           </div>
         </DndContext>
       </div>
+
+      {showModal && <TaskModal onClose={() => setShowModal(false)} />}
     </div>
   );
 }

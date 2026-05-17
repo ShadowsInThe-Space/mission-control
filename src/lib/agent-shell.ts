@@ -7,7 +7,7 @@ import { spawn } from 'child_process';
 
 export function runShellCommand(cmd: string, args: string[], timeout = 10000): Promise<{ stdout: string; stderr: string; exitCode: number }> {
   return new Promise((resolve) => {
-    const proc = spawn(cmd, args, { shell: true, timeout });
+    const proc = spawn(cmd, args, { shell: false, timeout });
     let stdout = '';
     let stderr = '';
     proc.stdout?.on('data', (d: Buffer) => (stdout += d.toString()));
