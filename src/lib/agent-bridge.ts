@@ -76,13 +76,16 @@ export async function getClaudeStatus(): Promise<AgentStatus> {
   }
 }
 
-// Placeholder functions — these are overridden by the API route using server-side shell calls
+// Placeholder functions — these are overridden by the API route using server-side shell calls.
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 async function runHermesCmd(_args: string[]): Promise<{ stdout: string; stderr: string; exitCode: number }> {
   return { stdout: '', stderr: 'client-side', exitCode: 1 };
 }
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 async function runOpenClawCmd(_args: string[]): Promise<{ stdout: string; stderr: string; exitCode: number }> {
   return { stdout: '', stderr: 'client-side', exitCode: 1 };
 }
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 async function runClaudeCmd(_bin: string, _args: string[]): Promise<{ stdout: string; stderr: string; exitCode: number }> {
   return { stdout: '', stderr: 'client-side', exitCode: 1 };
 }

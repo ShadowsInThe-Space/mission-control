@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useStore, type AgentType } from '@/lib/store';
 import { formatDistanceToNow } from 'date-fns';
-import { ScrollText, Trash2, Download, AlertTriangle, Info, Bug, AlertCircle, Filter } from 'lucide-react';
+import { ScrollText, Trash2, Download, AlertTriangle, Info, Bug, AlertCircle } from 'lucide-react';
 
 const LEVEL_COLORS = {
   info: 'var(--color-accent)',

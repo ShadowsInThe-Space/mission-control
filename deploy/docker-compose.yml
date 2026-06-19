@@ -1,0 +1,55 @@
+# Mission Control — local + Hetzner deployment via Docker Compose.
+#
+# Usage (local dev):
+#   docker compose -f deploy/docker-compose.yml up -d
+#
+# Usage (Hetzner production):
+#   - Point a Hetzner load balancer at this service on port 3000
+#   - Set RANKFORGE_API_KEY in your secret store (e.g. Hetzner secret manager)
+#   - Healthcheck URL: http://<host>:3000/api/health
+#
+# The compose file is intentionally minimal — Mission Control is a stateless
+# Next.js app. All state lives in:
+#   - RankForge / Firecrawl (external services)
+#   - MyWiki (Obsidian vault, mounted from the host)
+#   - The session DB (SQLite, in the mounted volume)
+#
+# When deploying to Hetzner, you will typically also run a separate
+# docker-compose stack for RankForge, Firecrawl, and the content studios.
+# Those are out of scope for this file; wire them in via service env vars
+# once they exist.
+
+services:
+  mission-control:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    image: mission-control:local
+    container_name: mission-control
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      RANKFORGE_URL: ${RANKFORGE_URL:-http://localhost:13001}
+      RANKFORGE_API_KEY: ${RANKFORGE_API_KEY:-}
+      FIRECRAWL_API_URL: ${FIRECRAWL_API_URL:-http://localhost:3002}
+      NOTEBOOKLM_MCP_URL: ${NOTEBOOKLM_MCP_URL:-http://127.0.0.1:8766}
+      BLOG_STUDIO_URL: ${BLOG_STUDIO_URL:-http://127.0.0.1:8770}
+      IMAGE_STUDIO_URL: ${IMAGE_STUDIO_URL:-http://127.0.0.1:8771}
+      VIDEO_STUDIO_URL: ${VIDEO_STUDIO_URL:-http://127.0.0.1:8772}
+      PODCAST_STUDIO_URL: ${PODCAST_STUDIO_URL:-http://127.0.0.1:8773}
+      VISION_STUDIO_URL: ${VISION_STUDIO_URL:-http://127.0.0.1:8774}
+      OLLAMA_HOST: ${OLLAMA_HOST:-http://127.0.0.1:11434}
+      MISSION_CONTROL_MYWIKI_PATH: ${MISSION_CONTROL_MYWIKI_PATH:-/data/mywiki}
+    volumes:
+      # Mount the Obsidian vault from the host so the wiki export can read
+      # and write notes. In production, replace with a read-only mount if
+      # the wiki is written from a different host.
+      - ${MYWIKI_HOST_PATH:-./data/mywiki}:/data/mywiki
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s

@@ -1,5 +1,7 @@
 import { create } from 'zustand';
 
+const isClient = typeof window !== 'undefined';
+
 export type AgentType = 'hermes' | 'openclaw' | 'claude';
 export type TaskStatus = 'backlog' | 'in-progress' | 'review' | 'done';
 
@@ -171,6 +173,10 @@ let taskCounter = 6;
 let sessionCounter = 3;
 let logCounter = 6;
 
+// Hydrate from localStorage on init
+const saved = isClient ? localStorage.getItem('mc-store-v2') : null;
+const savedState = saved ? JSON.parse(saved) : null;
+
 export const useStore = create<AppState>((set) => ({
   // UI
   activeView: 'sessions',
@@ -179,7 +185,7 @@ export const useStore = create<AppState>((set) => ({
   toggleSidebar: () => set((s) => ({ sidebarCollapsed: !s.sidebarCollapsed })),
 
   // Sessions
-  sessions: [
+  sessions: savedState?.sessions ?? [
     {
       id: 's1',
       agentType: 'hermes',
@@ -273,7 +279,7 @@ export const useStore = create<AppState>((set) => ({
       const res = await fetch('/api/agents/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sessionId, agentType: session.agentType, content }),
+        body: JSON.stringify({ sessionId, agentId: session.agentType, message: content }),
       });
       const data = await res.json();
       if (data.reply) {
@@ -320,8 +326,8 @@ export const useStore = create<AppState>((set) => ({
     },
     {
       id: 't4',
-      title: 'Obsidian journal export',
-      description: 'Export daily logs and memories to ~/obsidian-vault/',
+      title: 'mywiki journal export',
+      description: 'Export daily logs and memories to /home/z3r0b1nary/workspace/mywiki/',
       status: 'backlog',
       priority: 'medium',
       assignee: 'openclaw',
@@ -412,7 +418,7 @@ export const useStore = create<AppState>((set) => ({
       timestamp: Date.now() - 30000,
       level: 'info',
       source: 'system',
-      message: 'Obsidian vault detected at ~/obsidian-vault — journal export enabled',
+      message: 'mywiki vault detected at /home/z3r0b1nary/workspace/mywiki — journal export enabled',
     },
   ],
   addLog: (e) =>
@@ -425,8 +431,8 @@ export const useStore = create<AppState>((set) => ({
   clearLogs: () => set({ logs: [] }),
 
   // SEO/GEO
-  seoProjects: [],
-  activeProjectId: null,
+  seoProjects: savedState?.seoProjects ?? [],
+  activeProjectId: savedState?.activeProjectId ?? null,
 
   addProject: (p) =>
     set((st) => ({
@@ -557,3 +563,19 @@ export const useStore = create<AppState>((set) => ({
       ),
     })),
 }));
+
+// ─── Persistence: write to localStorage on every state change ───────────────
+if (isClient) {
+  useStore.subscribe((state) => {
+    localStorage.setItem(
+      'mission-control-storage',
+      JSON.stringify({
+        sessions: state.sessions,
+        tasks: state.tasks,
+        logs: state.logs,
+        seoProjects: state.seoProjects,
+        activeProjectId: state.activeProjectId,
+      })
+    );
+  });
+}

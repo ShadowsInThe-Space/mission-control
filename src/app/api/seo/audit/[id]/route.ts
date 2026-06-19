@@ -1,18 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const RANKFORGE_URL = process.env.RANKFORGE_URL || 'http://localhost:13002';
-const INTERNAL_API_KEY = process.env.RANKFORGE_API_KEY || 'mc-rankforge-secret-23e31f055bad31967a0222f9dfb2dbe2';
+import { buildRankForgeUrl, getSeoOpsConfig, normalizeAuditPages } from '@/lib/seo-ops';
 
-// GET /api/seo/audit/[id]?auditId=xxx — Poll RankForge for audit result
-export async function GET(req: NextRequest) {
+// GET /api/seo/audit/[id] — Poll RankForge for audit result
+export async function GET(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
+    const { id } = await params;
     const { searchParams } = new URL(req.url);
-    const auditId = searchParams.get('auditId');
-    if (!auditId) return NextResponse.json({ error: 'auditId required' }, { status: 400 });
+    const pollUntilComplete = searchParams.get('pollUntilComplete') === 'true';
 
-    const response = await fetch(`${RANKFORGE_URL}/api/internal/audit/${auditId}`, {
+    const config = getSeoOpsConfig();
+    const rfUrl = buildRankForgeUrl(`/api/internal/audit/${id}`, config);
+    if (pollUntilComplete) rfUrl.searchParams.set('pollUntilComplete', 'true');
+    const response = await fetch(rfUrl.toString(), {
       method: 'GET',
-      headers: { 'x-internal-api-key': INTERNAL_API_KEY },
+      headers: { 'x-internal-api-key': config.rankForgeApiKey },
     });
 
     if (!response.ok) {
@@ -33,23 +38,12 @@ export async function GET(req: NextRequest) {
       score: data.score,
       grade: data.grade,
       pagesFound: data.pagesFound,
-      pages: data.pages?.map((p: {
-        url: string; statusCode: number | null; title: string | null;
-        description: string | null; h1: string | null; wordCount: number | null;
-        score: number | null; issues: unknown;
-      }) => ({
-        url: p.url,
-        statusCode: p.statusCode,
-        title: p.title,
-        metaDescription: p.description,
-        h1: p.h1,
-        wordCount: p.wordCount,
-        score: p.score,
-        issues: typeof p.issues === 'string' ? JSON.parse(p.issues) : (p.issues || []),
-      })) || [],
+      pages: normalizeAuditPages(data.pages),
       keywords: data.keywords || [],
     });
   } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    const message = err instanceof Error ? err.message : String(err);
+    const status = message.includes('RANKFORGE_API_KEY') ? 503 : 500;
+    return NextResponse.json({ error: message }, { status });
   }
 }

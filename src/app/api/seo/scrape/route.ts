@@ -1,20 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const RANKFORGE_URL = process.env.RANKFORGE_URL || 'http://localhost:13002';
-const INTERNAL_API_KEY = process.env.RANKFORGE_API_KEY || 'mc-rankforge-secret-23e31f055bad31967a0222f9dfb2dbe2';
+import { buildRankForgeUrl, getSeoOpsConfig, validatePublicAuditUrl } from '@/lib/seo-ops';
 
 export async function POST(req: NextRequest) {
   try {
     const { url, keywords = [] } = await req.json();
     if (!url) return NextResponse.json({ error: 'url required' }, { status: 400 });
 
-    const response = await fetch(`${RANKFORGE_URL}/api/internal/audit`, {
+    const auditUrl = validatePublicAuditUrl(url);
+    const config = getSeoOpsConfig();
+    const response = await fetch(buildRankForgeUrl('/api/internal/audit', config), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-internal-api-key': INTERNAL_API_KEY,
+        'x-internal-api-key': config.rankForgeApiKey,
       },
-      body: JSON.stringify({ url, keywords }),
+      body: JSON.stringify({ url: auditUrl, keywords }),
     });
 
     if (!response.ok) {
@@ -31,6 +32,8 @@ export async function POST(req: NextRequest) {
       domain: data.domain,
     });
   } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    const message = err instanceof Error ? err.message : String(err);
+    const status = message.includes('public http URL') ? 400 : message.includes('RANKFORGE_API_KEY') ? 503 : 500;
+    return NextResponse.json({ error: message }, { status });
   }
 }

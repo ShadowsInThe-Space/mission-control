@@ -4,6 +4,59 @@
 
 ---
 
+## Quick start
+
+```bash
+nvm use 22                        # Node 22.22.3 (matches .nvmrc)
+npm install
+cp .env.example .env.local        # then edit values for your setup
+npm run dev                       # http://localhost:3000
+```
+
+## Scripts
+
+| Script              | Purpose                                          |
+|---------------------|--------------------------------------------------|
+| `npm run dev`       | Next.js dev server (port 3000)                   |
+| `npm run build`     | Production build                                 |
+| `npm run start`     | Run the production build                         |
+| `npm run lint`      | ESLint (Next + TypeScript rules)                 |
+| `npm run typecheck` | TypeScript no-emit check                         |
+| `npm test`          | Vitest (32 → 46 tests across 7 files)            |
+| `npm run test:watch`| Vitest watch mode                                |
+
+## Endpoints
+
+| Path                   | Purpose                                              |
+|------------------------|------------------------------------------------------|
+| `/api/health`          | Liveness/readiness probe (cheap, no network calls)   |
+| `/api/agents/status`   | Live status of every registered agent                |
+| `/api/agents/chat`     | Chat bridge (POST `{ agentId, message }`)            |
+| `/api/seo/scrape`      | RankForge-backed audit trigger (needs `RANKFORGE_API_KEY`) |
+| `/api/obsidian`        | mywiki vault listing / sync                          |
+
+## Registered agents
+
+The agent registry in `src/lib/agent-registry.ts` is the single source of truth. As of M2 it knows about 17 agents across four kinds:
+
+- **CLI agents** (8): `hermes`, `openclaw`, `claude`, `gemini`, `mmx`, `codex`, `ollama`, `antigravity`
+- **Feature services** (8): `rankforge`, `firecrawl`, `notebooklm`, `blog-studio`, `image-studio`, `video-studio`, `podcast-studio`, `vision-studio`
+- **Workspace** (1): `mywiki`
+
+CLI agents can answer chat messages if they have a `chatCommand` template; feature services expose health probes via `health`.
+
+## Deployment
+
+See [DEPLOY.md](./DEPLOY.md) for the Docker / Hetzner guide. The compose file at `deploy/docker-compose.yml` ships a stateless Next.js container that mounts the Obsidian vault and reads every env var from a local `.env`.
+
+## Architecture notes
+
+- **No new core model tools** are added in M2. Everything goes through the existing `agent-registry` + `agent-status-service` + `agent-chat` libs.
+- **The 9 remaining lint warnings** are pre-existing in uncommitted SEO/Sessions/Kanban files. M1 deliberately did not touch them. Run `npm run lint` to see the list.
+- **The `chatCommand` template** is per-agent; the runtime in `agent-chat.ts` substitutes `{{message}}` or appends the message as the last positional arg.
+
+---
+
 ## Features
 
 ### 🖥️ Agent Bridge

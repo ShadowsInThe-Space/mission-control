@@ -113,7 +113,11 @@ export default function SEOPanel() {
 // ─── Overview ─────────────────────────────────────────────────────────────────
 
 function OverviewTab() {
-  const { seoProjects } = useStore();
+  const { seoProjects, activeProjectId } = useStore();
+  const activeProject = seoProjects.find((p) => p.id === activeProjectId);
+  const latestRecord = activeProject && activeProject.seoRecords.length > 0
+    ? activeProject.seoRecords[activeProject.seoRecords.length - 1]
+    : null;
 
   if (seoProjects.length === 0) {
     return (
@@ -132,6 +136,15 @@ function OverviewTab() {
 
   return (
     <div className="p-4 space-y-4">
+      {/* Audit Dashboard — shown when active project has a scan */}
+      {latestRecord ? (
+        <AuditDashboard record={latestRecord} projectName={activeProject?.name || ''} />
+      ) : (
+        <div className="bg-white/5 border border-white/10 rounded-lg p-4 text-center text-gray-500 text-sm">
+          No audit data yet — run a scan in the <span className="text-blue-400">Scraper</span> tab to see RankForge results here
+        </div>
+      )}
+
       {/* Score Cards */}
       <div className="grid grid-cols-2 gap-3">
         <ScoreCard label="Avg Score" value={`${avgScore}%`} color={avgScore > 70 ? 'green' : avgScore > 40 ? 'yellow' : 'red'} tip="Durchschnittlicher SEO-Score über alle Projekte. >70% = gut, 40-70% = mittel, <40% = kritisch" />
@@ -149,6 +162,177 @@ function OverviewTab() {
       </div>
     </div>
   );
+}
+
+// ─── Audit Dashboard ──────────────────────────────────────────────────────────
+
+function AuditDashboard({ record, projectName }: { record: import('@/lib/store').SEORecord; projectName: string }) {
+  const score = record.score;
+  const scoreColor = score > 70 ? 'text-green-400' : score > 40 ? 'text-yellow-400' : 'text-red-400';
+  const scoreBg = score > 70 ? 'bg-green-500/20' : score > 40 ? 'bg-yellow-500/20' : 'bg-red-500/20';
+  const grade = scoreToGrade(score);
+  const gradeColor = gradeToColor(grade);
+
+  const criticalCount = record.issues.filter((i) => i.severity === 'critical').length;
+  const warningCount = record.issues.filter((i) => i.severity === 'warning').length;
+  const infoCount = record.issues.filter((i) => i.severity === 'info').length;
+
+  const topIssues = [...record.issues].slice(0, 8);
+
+  return (
+    <div className="bg-white/5 border border-white/10 rounded-lg p-4 space-y-4">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium text-white">Latest Audit</span>
+          <TooltipIcon tip={`RankForge audit results for ${projectName}. Run a new scan in the Scraper tab to update.`} />
+        </div>
+        <span className="text-xs text-gray-500">
+          {new Date(record.scrapedAt).toLocaleString()}
+        </span>
+      </div>
+
+      {/* Score ring + grade + metrics row */}
+      <div className="flex items-start gap-4">
+        {/* Score Ring */}
+        <div className="relative flex-shrink-0">
+          <ScoreRing score={score} size={80} strokeWidth={8} />
+        </div>
+
+        {/* Grade Badge */}
+        <div className="flex flex-col items-center justify-center px-3">
+          <div className={`text-2xl font-black font-mono ${gradeColor}`}>{grade}</div>
+          <div className="text-[10px] text-gray-500 uppercase tracking-wider">Grade</div>
+        </div>
+
+        {/* Metrics */}
+        <div className="flex-1 grid grid-cols-3 gap-2">
+          <MetricPill label="Pages" value={record.url ? '1' : '0'} tip="Number of pages crawled and analyzed" />
+          <MetricPill label="Issues" value={record.issues.length.toString()} tip="Total SEO issues found across all pages" color={record.issues.length > 10 ? 'red' : record.issues.length > 5 ? 'yellow' : 'green'} />
+          <MetricPill label="Score" value={`${score}%`} tip="Overall SEO health score. >70 = good, 40-70 = needs work, <40 = critical" color={score > 70 ? 'green' : score > 40 ? 'yellow' : 'red'} />
+        </div>
+      </div>
+
+      {/* Issue severity breakdown */}
+      <div className="flex gap-3 text-xs">
+        {criticalCount > 0 && (
+          <span className="flex items-center gap-1 text-red-400">
+            <span className="w-1.5 h-1.5 rounded-full bg-red-400" />{criticalCount} critical
+          </span>
+        )}
+        {warningCount > 0 && (
+          <span className="flex items-center gap-1 text-yellow-400">
+            <span className="w-1.5 h-1.5 rounded-full bg-yellow-400" />{warningCount} warnings
+          </span>
+        )}
+        {infoCount > 0 && (
+          <span className="flex items-center gap-1 text-blue-400">
+            <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />{infoCount} info
+          </span>
+        )}
+      </div>
+
+      {/* Top Issues List */}
+      {topIssues.length > 0 && (
+        <div className="space-y-1.5">
+          <h4 className="text-xs font-medium text-gray-400">Top Issues</h4>
+          {topIssues.map((issue, i) => (
+            <div
+              key={i}
+              className={`text-xs px-3 py-2 rounded flex items-start gap-2 ${
+                issue.severity === 'critical'
+                  ? 'bg-red-500/10 text-red-300 border-l-2 border-red-500'
+                  : issue.severity === 'warning'
+                  ? 'bg-yellow-500/10 text-yellow-300 border-l-2 border-yellow-500'
+                  : 'bg-blue-500/10 text-blue-300 border-l-2 border-blue-500'
+              }`}
+            >
+              <span className="font-mono text-[10px] mt-0.5 shrink-0 w-20 truncate">{issue.code}</span>
+              <span className="flex-1">{issue.message}</span>
+            </div>
+          ))}
+          {record.issues.length > 8 && (
+            <div className="text-center text-xs text-gray-600 pt-1">
+              +{record.issues.length - 8} more issues — see Scraper tab for full report
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ScoreRing({ score, size = 80, strokeWidth = 8 }: { score: number; size?: number; strokeWidth?: number }) {
+  const radius = (size - strokeWidth) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const offset = circumference - (score / 100) * circumference;
+  const scoreColor = score > 70 ? '#4ade80' : score > 40 ? '#facc15' : '#f87171';
+  const trackColor = 'rgba(255,255,255,0.08)';
+
+  return (
+    <div className="relative inline-flex items-center justify-center">
+      <svg width={size} height={size} className="-rotate-90">
+        {/* Track */}
+        <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke={trackColor} strokeWidth={strokeWidth} />
+        {/* Progress */}
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          fill="none"
+          stroke={scoreColor}
+          strokeWidth={strokeWidth}
+          strokeLinecap="round"
+          strokeDasharray={circumference}
+          strokeDashoffset={offset}
+          style={{ transition: 'stroke-dashoffset 0.8s ease' }}
+        />
+      </svg>
+      <div className="absolute inset-0 flex flex-col items-center justify-center">
+        <span
+          className="font-bold font-mono text-lg leading-none"
+          style={{ color: scoreColor }}
+        >
+          {score}
+        </span>
+        <span className="text-[9px] text-gray-500 mt-0.5">/ 100</span>
+      </div>
+    </div>
+  );
+}
+
+function MetricPill({ label, value, tip, color }: { label: string; value: string; tip?: string; color?: 'green' | 'yellow' | 'red' }) {
+  const textColor = color === 'green' ? 'text-green-400' : color === 'yellow' ? 'text-yellow-400' : color === 'red' ? 'text-red-400' : 'text-white';
+  return (
+    <div className="bg-white/5 rounded p-2 text-center">
+      <div className={`text-sm font-bold font-mono ${textColor}`}>{value}</div>
+      <div className="flex items-center justify-center gap-0.5">
+        <span className="text-[10px] text-gray-500">{label}</span>
+        {tip && <TooltipIcon tip={tip} />}
+      </div>
+    </div>
+  );
+}
+
+function scoreToGrade(score: number): string {
+  if (score >= 90) return 'A+';
+  if (score >= 85) return 'A';
+  if (score >= 80) return 'A-';
+  if (score >= 75) return 'B+';
+  if (score >= 70) return 'B';
+  if (score >= 65) return 'B-';
+  if (score >= 60) return 'C+';
+  if (score >= 55) return 'C';
+  if (score >= 50) return 'C-';
+  if (score >= 40) return 'D';
+  return 'F';
+}
+
+function gradeToColor(grade: string): string {
+  if (grade.startsWith('A')) return 'text-green-400';
+  if (grade.startsWith('B')) return 'text-blue-400';
+  if (grade.startsWith('C')) return 'text-yellow-400';
+  if (grade === 'D') return 'text-orange-400';
+  return 'text-red-400';
 }
 
 function ScoreCard({ label, value, color, tip }: { label: string; value: string; color?: 'green' | 'yellow' | 'red'; tip?: string }) {

@@ -1,16 +1,25 @@
 /**
- * Obsidian Vault Export
- * Writes journal entries and memory exports to ~/obsidian-vault/
+ * Shared mywiki export
+ * Writes session logs and memory exports to the Obsidian-backed mywiki vault.
  */
 
 import * as fs from 'fs';
 import * as path from 'path';
 
-const VAULT_PATH = '/home/z3r0b1nary/obsidian-vault';
+const VAULT_PATH = process.env.MYWIKI_PATH || '/home/z3r0b1nary/workspace/mywiki';
 
-function ensureVault(): boolean {
-  if (!fs.existsSync(VAULT_PATH)) {
-    console.error('[ObsidianExport] Vault not found at', VAULT_PATH);
+interface ExportOptions {
+  vaultPath?: string;
+}
+
+function getResolvedVaultPath(options: ExportOptions = {}): string {
+  return options.vaultPath || VAULT_PATH;
+}
+
+function ensureVault(options: ExportOptions = {}): boolean {
+  const vaultPath = getResolvedVaultPath(options);
+  if (!fs.existsSync(vaultPath)) {
+    console.error('[ObsidianExport] Vault not found at', vaultPath);
     return false;
   }
   return true;
@@ -25,13 +34,14 @@ export function isVaultAvailable(): boolean {
 }
 
 /** Write a daily journal entry */
-export function writeJournalEntry(date: string, content: string): { success: boolean; path: string } {
-  if (!ensureVault()) return { success: false, path: '' };
-  const journalsDir = path.join(VAULT_PATH, 'journals');
-  if (!fs.existsSync(journalsDir)) {
-    fs.mkdirSync(journalsDir, { recursive: true });
+export function writeJournalEntry(date: string, content: string, options: ExportOptions = {}): { success: boolean; path: string } {
+  if (!ensureVault(options)) return { success: false, path: '' };
+  const vaultPath = getResolvedVaultPath(options);
+  const sessionsDir = path.join(vaultPath, 'sessions');
+  if (!fs.existsSync(sessionsDir)) {
+    fs.mkdirSync(sessionsDir, { recursive: true });
   }
-  const filePath = path.join(journalsDir, `${date}.md`);
+  const filePath = path.join(sessionsDir, `${date}-mission-control-log.md`);
   const frontmatter = `---
 date: ${date}
 tags: [journal, mission-control]
@@ -41,9 +51,10 @@ tags: [journal, mission-control]
 }
 
 /** Export a memory note */
-export function writeMemoryNote(title: string, content: string, tags: string[] = []): { success: boolean; path: string } {
-  if (!ensureVault()) return { success: false, path: '' };
-  const memoriesDir = path.join(VAULT_PATH, 'memories');
+export function writeMemoryNote(title: string, content: string, tags: string[] = [], options: ExportOptions = {}): { success: boolean; path: string } {
+  if (!ensureVault(options)) return { success: false, path: '' };
+  const vaultPath = getResolvedVaultPath(options);
+  const memoriesDir = path.join(vaultPath, 'agent-memory');
   if (!fs.existsSync(memoriesDir)) {
     fs.mkdirSync(memoriesDir, { recursive: true });
   }
@@ -61,9 +72,9 @@ created: ${new Date().toISOString().split('T')[0]}
 /** List journal entries */
 export function listJournalEntries(): string[] {
   if (!ensureVault()) return [];
-  const journalsDir = path.join(VAULT_PATH, 'journals');
-  if (!fs.existsSync(journalsDir)) return [];
-  return fs.readdirSync(journalsDir)
+  const sessionsDir = path.join(VAULT_PATH, 'sessions');
+  if (!fs.existsSync(sessionsDir)) return [];
+  return fs.readdirSync(sessionsDir)
     .filter((f) => f.endsWith('.md'))
     .sort()
     .reverse();
@@ -71,7 +82,7 @@ export function listJournalEntries(): string[] {
 
 /** Read a journal entry */
 export function readJournalEntry(date: string): string | null {
-  const filePath = path.join(VAULT_PATH, 'journals', `${date}.md`);
+  const filePath = path.join(VAULT_PATH, 'sessions', `${date}-mission-control-log.md`);
   if (!fs.existsSync(filePath)) return null;
   return fs.readFileSync(filePath, 'utf-8');
 }
