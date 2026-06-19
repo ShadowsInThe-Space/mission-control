@@ -86,3 +86,20 @@ export function readJournalEntry(date: string): string | null {
   if (!fs.existsSync(filePath)) return null;
   return fs.readFileSync(filePath, 'utf-8');
 }
+
+/** Write a structured session log to sessions/ (handoff, agent, or any structured log) */
+export function writeSessionLog(name: string, content: string, options: ExportOptions = {}): { success: boolean; path: string } {
+  if (!ensureVault(options)) return { success: false, path: '' };
+  const vaultPath = getResolvedVaultPath(options);
+  const sessionsDir = path.join(vaultPath, 'sessions');
+  if (!fs.existsSync(sessionsDir)) {
+    fs.mkdirSync(sessionsDir, { recursive: true });
+  }
+  const safeName = name
+    .replace(/[^a-zA-Z0-9-_]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .toLowerCase();
+  const filePath = path.join(sessionsDir, `${safeName}.md`);
+  fs.writeFileSync(filePath, content);
+  return { success: true, path: filePath };
+}
