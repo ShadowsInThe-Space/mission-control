@@ -7,6 +7,7 @@ import KanbanBoard from '@/components/KanbanBoard';
 import LogsPanel from '@/components/LogsPanel';
 import AgentsPanel from '@/components/AgentsPanel';
 import SEOPanel from '@/components/SEOPanel';
+import HandoffPanel from '@/components/HandoffPanel';
 
 export default function Home() {
   const { activeView } = useStore();
@@ -20,6 +21,7 @@ export default function Home() {
         {activeView === 'logs' && <LogsPanel />}
         {activeView === 'seo' && <SEOPanel />}
         {activeView === 'agents' && <AgentsPanel />}
+        {activeView === 'handoff' && <HandoffPanel />}
       </main>
     </div>
   );
