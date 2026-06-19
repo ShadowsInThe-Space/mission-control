@@ -132,10 +132,12 @@ export async function handoff(req: HandoffRequest): Promise<HandoffResult> {
   if (req.vaultSessionName) {
     try {
       const env = validateEnv();
-      const basePath = req.vaultPath || env.mywiki.path;
-      if (!basePath) {
-        // No vault path → skip silently. Better than throwing.
-      } else {
+      // `req.vaultPath === undefined` → use env default (env.mywiki.path).
+      // `req.vaultPath === ''` → skip vault write (used by tests).
+      // Any other string → use it as the vault base.
+      const basePath =
+        req.vaultPath !== undefined ? req.vaultPath : env.mywiki.path;
+      if (basePath) {
         const content = renderVaultSession(req, stages, Date.now() - start);
         const result = writeSessionLog(req.vaultSessionName, content, { vaultPath: basePath });
         if (result.success) {

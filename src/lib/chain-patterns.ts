@@ -15,6 +15,8 @@ export interface ChainPatternOptions {
   timeoutMs?: number;
   /** Inject a custom runner (used by tests). Defaults to `spawnRunner`. */
   runner?: HandoffRequest['runner'];
+  /** Override the mywiki path. Pass `''` to disable vault write. */
+  vaultPath?: HandoffRequest['vaultPath'];
 }
 
 export interface ResearchToBuildOptions extends ChainPatternOptions {
@@ -31,6 +33,7 @@ export async function researchToBuild(opts: ResearchToBuildOptions) {
     vaultSessionName: opts.outSession,
     timeoutMs: opts.timeoutMs,
     runner: opts.runner,
+    vaultPath: opts.vaultPath,
   });
 }
 
@@ -47,6 +50,7 @@ export async function auditToReport(opts: AuditToReportOptions) {
     vaultSessionName: opts.outSession,
     timeoutMs: opts.timeoutMs,
     runner: opts.runner,
+    vaultPath: opts.vaultPath,
   });
 }
 
@@ -63,5 +67,6 @@ export async function briefToSpec(opts: BriefToSpecOptions) {
     vaultSessionName: opts.outSession,
     timeoutMs: opts.timeoutMs,
     runner: opts.runner,
+    vaultPath: opts.vaultPath,
   });
 }

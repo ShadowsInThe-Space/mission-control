@@ -23,6 +23,7 @@ describe('chain-patterns', () => {
       topic: 'AI SEO tools',
       domain: 'DACH Mittelstand',
       outSession: 'rtb-test',
+      vaultPath: '', // test escape hatch — don't write to the real mywiki
       runner,
     });
 
@@ -43,6 +44,7 @@ describe('chain-patterns', () => {
     const result = await auditToReport({
       auditData: 'SCORE: 24, ISSUES: slow LCP, missing meta',
       outSession: 'a2r-test',
+      vaultPath: '',
       runner,
     });
 
@@ -63,6 +65,7 @@ describe('chain-patterns', () => {
     const result = await briefToSpec({
       brief: 'Build a tool for X',
       outSession: 'b2s-test',
+      vaultPath: '',
       runner,
     });
 
