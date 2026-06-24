@@ -11,6 +11,7 @@ import {
   ChevronRight,
   Terminal,
   ArrowRightLeft,
+  Brain,
 } from 'lucide-react';
 
 const NAV_ITEMS = [
@@ -20,6 +21,7 @@ const NAV_ITEMS = [
   { id: 'seo' as const, icon: Search, label: 'SEO / GEO' },
   { id: 'agents' as const, icon: Cpu, label: 'Agents' },
   { id: 'handoff' as const, icon: ArrowRightLeft, label: 'Handoff' },
+  { id: 'memory' as const, icon: Brain, label: 'Memory' },
 ];
 
 export default function Sidebar() {

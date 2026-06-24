@@ -9,6 +9,7 @@ import AgentsPanel from '@/components/AgentsPanel';
 import SEOPanel from '@/components/SEOPanel';
 import HandoffPanel from '@/components/HandoffPanel';
 import AgentDetailPanel from '@/components/AgentDetailPanel';
+import GitHubMemoryPanel from '@/components/GitHubMemoryPanel';
 
 export default function Home() {
   const { activeView } = useStore();
@@ -23,6 +24,7 @@ export default function Home() {
         {activeView === 'seo' && <SEOPanel />}
         {activeView === 'agents' && <AgentsPanel />}
         {activeView === 'handoff' && <HandoffPanel />}
+        {activeView === 'memory' && <GitHubMemoryPanel />}
       </main>
       <AgentDetailPanel />
     </div>
