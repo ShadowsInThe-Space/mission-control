@@ -8,6 +8,7 @@ import LogsPanel from '@/components/LogsPanel';
 import AgentsPanel from '@/components/AgentsPanel';
 import SEOPanel from '@/components/SEOPanel';
 import HandoffPanel from '@/components/HandoffPanel';
+import AgentDetailPanel from '@/components/AgentDetailPanel';
 
 export default function Home() {
   const { activeView } = useStore();
@@ -23,6 +24,7 @@ export default function Home() {
         {activeView === 'agents' && <AgentsPanel />}
         {activeView === 'handoff' && <HandoffPanel />}
       </main>
+      <AgentDetailPanel />
     </div>
   );
 }

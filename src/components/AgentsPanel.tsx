@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Cpu, RefreshCw, Terminal, Wifi, WifiOff, CircleDot } from 'lucide-react';
 import { listAgentDefinitions } from '@/lib/agent-registry';
+import { useStore } from '@/lib/store';
 
 interface AgentInfo {
   type: string;
@@ -57,6 +58,8 @@ export default function AgentsPanel() {
       setLoading(false);
     }
   }
+
+  const { setSelectedAgent } = useStore();
 
   useEffect(() => {
     const tick = () => setTimeout(() => refresh(), 0);
@@ -160,6 +163,14 @@ export default function AgentsPanel() {
                     </code>
                   </div>
                 )}
+
+                <button
+                  onClick={() => setSelectedAgent(definition.id)}
+                  className="agent-card-open-btn"
+                  data-testid={`open-agent-${definition.id}`}
+                >
+                  Open agent details
+                </button>
               </div>
             );
           })}

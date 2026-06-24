@@ -28,6 +28,21 @@ export interface AgentDefinition {
   actions: Record<string, AgentCommandTemplate>;
   health?: AgentHealthTemplate;
   chatCommand?: AgentChatCommandTemplate;
+  /**
+   * Optional hint describing a sub-endpoint exposed by HTTP-kind or feature agents.
+   * The Mission Control API uses this to wire `GET/POST /api/agents/[id]/<endpoint>`
+   * calls from the AgentDetailPanel UI.
+   */
+  httpEndpoints?: AgentHttpEndpoint[];
+}
+
+export interface AgentHttpEndpoint {
+  id: string;
+  method: 'GET' | 'POST';
+  path: string;
+  label: string;
+  description: string;
+  params?: Array<{ name: string; label: string; required?: boolean; placeholder?: string }>;
 }
 
 export interface AgentCommandTemplate {
@@ -67,9 +82,10 @@ export const AGENT_DEFINITIONS: AgentDefinition[] = [
     label: 'Hermes Agent',
     kind: 'cli',
     description: 'Local Hermes agent with workspace, gateway, memory, and MCP support.',
-    capabilities: ['status', 'chat', 'workspace', 'memory'],
+    capabilities: ['status', 'chat', 'workspace', 'memory', 'help'],
     actions: {
       version: { bin: 'hermes', args: ['--version'], timeoutMs: 10_000 },
+      help: { bin: 'hermes', args: ['--help'], timeoutMs: 10_000 },
     },
     chatCommand: {
       bin: 'hermes',
@@ -82,9 +98,10 @@ export const AGENT_DEFINITIONS: AgentDefinition[] = [
     label: 'OpenClaw',
     kind: 'cli',
     description: 'Local OpenClaw harness for channels, devices, tasks, flows, and agent extensions.',
-    capabilities: ['status', 'channels', 'tasks', 'extensions'],
+    capabilities: ['status', 'channels', 'tasks', 'extensions', 'help'],
     actions: {
       version: { bin: 'openclaw', args: ['--version'], timeoutMs: 10_000 },
+      help: { bin: 'openclaw', args: ['--help'], timeoutMs: 10_000 },
     },
   },
   {
@@ -92,9 +109,10 @@ export const AGENT_DEFINITIONS: AgentDefinition[] = [
     label: 'Claude CLI',
     kind: 'cli',
     description: 'Claude Code CLI for local coding-agent sessions and repository work.',
-    capabilities: ['status', 'chat', 'code'],
+    capabilities: ['status', 'chat', 'code', 'help'],
     actions: {
       version: { bin: 'claude', args: ['--version'], timeoutMs: 10_000 },
+      help: { bin: 'claude', args: ['--help'], timeoutMs: 10_000 },
     },
     chatCommand: {
       bin: 'claude',
@@ -108,9 +126,10 @@ export const AGENT_DEFINITIONS: AgentDefinition[] = [
     label: 'Gemini CLI',
     kind: 'cli',
     description: 'Gemini CLI for Google model workflows, MCP tools, and research tasks.',
-    capabilities: ['status', 'chat', 'mcp'],
+    capabilities: ['status', 'chat', 'mcp', 'help'],
     actions: {
       version: { bin: 'gemini', args: ['--version'], timeoutMs: 10_000 },
+      help: { bin: 'gemini', args: ['--help'], timeoutMs: 10_000 },
     },
     chatCommand: {
       bin: 'gemini',
@@ -123,9 +142,10 @@ export const AGENT_DEFINITIONS: AgentDefinition[] = [
     label: 'MMX CLI',
     kind: 'cli',
     description: 'MiniMax CLI used for fast local model and media-oriented workflows.',
-    capabilities: ['status', 'chat'],
+    capabilities: ['status', 'chat', 'help'],
     actions: {
       version: { bin: 'mmx', args: ['--version'], timeoutMs: 10_000 },
+      help: { bin: 'mmx', args: ['--help'], timeoutMs: 10_000 },
     },
     chatCommand: {
       bin: 'mmx',
@@ -138,9 +158,10 @@ export const AGENT_DEFINITIONS: AgentDefinition[] = [
     label: 'Codex',
     kind: 'cli',
     description: 'OpenAI Codex CLI for coding-agent tasks and local workspace automation.',
-    capabilities: ['status', 'chat', 'code'],
+    capabilities: ['status', 'chat', 'code', 'help'],
     actions: {
       version: { bin: 'codex', args: ['--version'], timeoutMs: 10_000 },
+      help: { bin: 'codex', args: ['--help'], timeoutMs: 10_000 },
     },
     chatCommand: {
       bin: 'codex',
@@ -153,9 +174,10 @@ export const AGENT_DEFINITIONS: AgentDefinition[] = [
     label: 'Ollama',
     kind: 'http',
     description: 'Local Ollama model server for private model inference and model inventory.',
-    capabilities: ['status', 'models', 'chat'],
+    capabilities: ['status', 'models', 'chat', 'help'],
     actions: {
       version: { bin: 'ollama', args: ['--version'], timeoutMs: 10_000 },
+      help: { bin: 'ollama', args: ['--help'], timeoutMs: 10_000 },
     },
     health: {
       envVar: 'OLLAMA_HOST',
@@ -163,6 +185,23 @@ export const AGENT_DEFINITIONS: AgentDefinition[] = [
       path: '/api/tags',
       timeoutMs: 5_000,
     },
+    httpEndpoints: [
+      {
+        id: 'list-models',
+        method: 'GET',
+        path: '/api/tags',
+        label: 'List local models',
+        description: 'Returns all models currently pulled into the local Ollama cache.',
+      },
+      {
+        id: 'show-model',
+        method: 'POST',
+        path: '/api/show',
+        label: 'Show model info',
+        description: 'Returns metadata for a named model (modelfile, template, params).',
+        params: [{ name: 'name', label: 'Model name', required: true, placeholder: 'llama3.2' }],
+      },
+    ],
     chatCommand: {
       bin: 'ollama',
       args: ['run', 'llama3.2', '{{message}}'],
@@ -174,9 +213,10 @@ export const AGENT_DEFINITIONS: AgentDefinition[] = [
     label: 'Google Antigravity',
     kind: 'cli',
     description: 'Google Antigravity CLI and IDE harness exposed through the local agy command.',
-    capabilities: ['status', 'chat', 'ide', 'agentapi'],
+    capabilities: ['status', 'chat', 'ide', 'agentapi', 'help'],
     actions: {
       version: { bin: 'agy', args: ['--version'], timeoutMs: 10_000 },
+      help: { bin: 'agy', args: ['--help'], timeoutMs: 10_000 },
     },
     chatCommand: {
       bin: 'agy',
@@ -189,7 +229,7 @@ export const AGENT_DEFINITIONS: AgentDefinition[] = [
     label: 'RankForge',
     kind: 'feature',
     description: 'Local SEO/GEO audit application used by the SEO Ops feature module.',
-    capabilities: ['health', 'audit', 'keywords', 'reports'],
+    capabilities: ['health', 'audit', 'keywords', 'reports', 'projects'],
     actions: {},
     health: {
       envVar: 'RANKFORGE_URL',
@@ -197,6 +237,26 @@ export const AGENT_DEFINITIONS: AgentDefinition[] = [
       path: '/api/health',
       timeoutMs: 5_000,
     },
+    httpEndpoints: [
+      {
+        id: 'projects',
+        method: 'GET',
+        path: '/api/projects',
+        label: 'List SEO projects',
+        description: 'Returns all SEO projects known to RankForge.',
+      },
+      {
+        id: 'audit',
+        method: 'POST',
+        path: '/api/audit',
+        label: 'Trigger audit',
+        description: 'Starts an SEO/GEO audit for the given URL.',
+        params: [
+          { name: 'url', label: 'URL', required: true, placeholder: 'https://example.com' },
+          { name: 'projectId', label: 'Project ID (optional)', required: false },
+        ],
+      },
+    ],
   },
   {
     id: 'firecrawl',
@@ -211,21 +271,58 @@ export const AGENT_DEFINITIONS: AgentDefinition[] = [
       path: '/v0/health',
       timeoutMs: 5_000,
     },
+    httpEndpoints: [
+      {
+        id: 'scrape',
+        method: 'POST',
+        path: '/v1/scrape',
+        label: 'Scrape URL',
+        description: 'Returns clean markdown for a given URL.',
+        params: [
+          { name: 'url', label: 'URL', required: true, placeholder: 'https://example.com' },
+        ],
+      },
+    ],
   },
   {
     id: 'mywiki',
     label: 'MyWiki Knowledge Graph',
     kind: 'workspace',
     description: 'Obsidian Markdown knowledge graph synced to GitHub for durable agent memory.',
-    capabilities: ['read', 'write', 'search', 'sync'],
+    capabilities: ['read', 'write', 'search', 'sync', 'github'],
     actions: {},
+    httpEndpoints: [
+      {
+        id: 'list',
+        method: 'GET',
+        path: '/api/list',
+        label: 'List vault files',
+        description: 'Returns a tree of files currently in the mywiki vault.',
+      },
+      {
+        id: 'read',
+        method: 'GET',
+        path: '/api/read',
+        label: 'Read file',
+        description: 'Returns the contents of a single vault file.',
+        params: [{ name: 'path', label: 'Path', required: true, placeholder: 'MEMORY.md' }],
+      },
+      {
+        id: 'search',
+        method: 'GET',
+        path: '/api/search',
+        label: 'Search vault',
+        description: 'Full-text search across the vault.',
+        params: [{ name: 'q', label: 'Query', required: true, placeholder: 'AGENTIC' }],
+      },
+    ],
   },
   {
     id: 'notebooklm',
     label: 'NotebookLM',
     kind: 'feature',
     description: 'Google NotebookLM research and artifact pipeline exposed through skills or MCP.',
-    capabilities: ['sources', 'research', 'artifacts', 'podcast'],
+    capabilities: ['sources', 'research', 'artifacts', 'podcast', 'mcp'],
     actions: {},
     health: {
       envVar: 'NOTEBOOKLM_MCP_URL',
@@ -239,7 +336,7 @@ export const AGENT_DEFINITIONS: AgentDefinition[] = [
     label: 'Blog Studio',
     kind: 'feature',
     description: 'Long-form blog post generation pipeline (rankforge, mmx, claude, vision inputs).',
-    capabilities: ['outline', 'draft', 'edit', 'seo-check'],
+    capabilities: ['outline', 'draft', 'edit', 'seo-check', 'generate'],
     actions: {},
     health: {
       envVar: 'BLOG_STUDIO_URL',
@@ -247,6 +344,19 @@ export const AGENT_DEFINITIONS: AgentDefinition[] = [
       path: '/api/health',
       timeoutMs: 5_000,
     },
+    httpEndpoints: [
+      {
+        id: 'generate',
+        method: 'POST',
+        path: '/api/generate',
+        label: 'Generate blog post',
+        description: 'Generate a long-form blog post from a topic + tone.',
+        params: [
+          { name: 'topic', label: 'Topic', required: true, placeholder: 'AI agents for SEO' },
+          { name: 'tone', label: 'Tone (optional)', required: false, placeholder: 'editorial' },
+        ],
+      },
+    ],
   },
   {
     id: 'image-studio',
@@ -261,6 +371,16 @@ export const AGENT_DEFINITIONS: AgentDefinition[] = [
       path: '/api/health',
       timeoutMs: 5_000,
     },
+    httpEndpoints: [
+      {
+        id: 'generate',
+        method: 'POST',
+        path: '/api/generate',
+        label: 'Generate image',
+        description: 'Generate an image from a text prompt (provider selected by the studio).',
+        params: [{ name: 'prompt', label: 'Prompt', required: true }],
+      },
+    ],
   },
   {
     id: 'video-studio',
@@ -275,6 +395,16 @@ export const AGENT_DEFINITIONS: AgentDefinition[] = [
       path: '/api/health',
       timeoutMs: 5_000,
     },
+    httpEndpoints: [
+      {
+        id: 'generate',
+        method: 'POST',
+        path: '/api/generate',
+        label: 'Generate video',
+        description: 'Generate a short video clip from a text prompt.',
+        params: [{ name: 'prompt', label: 'Prompt', required: true }],
+      },
+    ],
   },
   {
     id: 'podcast-studio',
@@ -289,6 +419,16 @@ export const AGENT_DEFINITIONS: AgentDefinition[] = [
       path: '/api/health',
       timeoutMs: 5_000,
     },
+    httpEndpoints: [
+      {
+        id: 'script',
+        method: 'POST',
+        path: '/api/script',
+        label: 'Generate podcast script',
+        description: 'Generate a two-host podcast script from a topic.',
+        params: [{ name: 'topic', label: 'Topic', required: true }],
+      },
+    ],
   },
   {
     id: 'vision-studio',
@@ -303,6 +443,16 @@ export const AGENT_DEFINITIONS: AgentDefinition[] = [
       path: '/api/health',
       timeoutMs: 5_000,
     },
+    httpEndpoints: [
+      {
+        id: 'describe',
+        method: 'POST',
+        path: '/api/describe',
+        label: 'Describe image',
+        description: 'Returns a textual description of an image (URL or base64).',
+        params: [{ name: 'image', label: 'Image URL or base64', required: true }],
+      },
+    ],
   },
 ];
 
@@ -321,4 +471,22 @@ export function buildAgentCommand(agentId: string, action: string): AgentCommand
   const command = definition.actions[action];
   if (!command) throw new Error(`Action is not allowlisted for ${agentId}: ${action}`);
   return command;
+}
+
+/** Returns the httpEndpoint by id, or undefined. */
+export function getHttpEndpoint(agentId: string, endpointId: string) {
+  const definition = getAgentDefinition(agentId);
+  return definition.httpEndpoints?.find((e) => e.id === endpointId);
+}
+
+/** Returns the list of declared actions for an agent (id + command preview). */
+export function listActionSummaries(agentId: string) {
+  const def = getAgentDefinition(agentId);
+  return Object.entries(def.actions).map(([id, cmd]) => ({
+    id,
+    label: id,
+    bin: cmd.bin,
+    args: cmd.args,
+    timeoutMs: cmd.timeoutMs,
+  }));
 }

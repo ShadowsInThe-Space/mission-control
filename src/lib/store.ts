@@ -130,6 +130,10 @@ interface AppState {
   setActiveView: (v: AppState['activeView']) => void;
   toggleSidebar: () => void;
 
+  // Agent detail (overlay panel)
+  selectedAgentId: string | null;
+  setSelectedAgent: (id: string | null) => void;
+
   // Sessions
   sessions: Session[];
   activeSessionId: string | null;
@@ -183,6 +187,10 @@ export const useStore = create<AppState>((set) => ({
   sidebarCollapsed: false,
   setActiveView: (v) => set({ activeView: v }),
   toggleSidebar: () => set((s) => ({ sidebarCollapsed: !s.sidebarCollapsed })),
+
+  // Agent detail
+  selectedAgentId: null,
+  setSelectedAgent: (id) => set({ selectedAgentId: id }),
 
   // Sessions
   sessions: savedState?.sessions ?? [
