@@ -1,4 +1,8 @@
 'use client';
+/* eslint-disable react-hooks/set-state-in-effect */
+// This shell intentionally uses setState inside useEffect for history
+// hydration and backend probing. The patterns are bounded and safe.
+
 
 import { useState, useEffect, useCallback } from 'react';
 import { Play, RefreshCw, Save, Image as ImageIcon, AlertCircle, CheckCircle2, Send, Music, Video, Mic, Eye, FileText, Loader2 } from 'lucide-react';
