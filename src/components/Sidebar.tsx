@@ -12,6 +12,12 @@ import {
   Terminal,
   ArrowRightLeft,
   Brain,
+  Image,
+  Video,
+  Music,
+  Mic,
+  Eye,
+  FileText,
 } from 'lucide-react';
 
 const NAV_ITEMS = [
@@ -22,6 +28,12 @@ const NAV_ITEMS = [
   { id: 'agents' as const, icon: Cpu, label: 'Agents' },
   { id: 'handoff' as const, icon: ArrowRightLeft, label: 'Handoff' },
   { id: 'memory' as const, icon: Brain, label: 'Memory' },
+  { id: 'image-studio' as const, icon: Image, label: 'Image' },
+  { id: 'video-studio' as const, icon: Video, label: 'Video' },
+  { id: 'music-studio' as const, icon: Music, label: 'Music' },
+  { id: 'podcast-studio' as const, icon: Mic, label: 'Podcast' },
+  { id: 'vision-studio' as const, icon: Eye, label: 'Vision' },
+  { id: 'blog-studio' as const, icon: FileText, label: 'Blog' },
 ];
 
 export default function Sidebar() {
