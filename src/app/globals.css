@@ -42,3 +42,155 @@ body {
 /* Kanban drag */
 .dragging { opacity: 0.4; }
 .drag-over { border-color: var(--color-accent) !important; background: rgba(99,102,241,0.05); }
+
+/* ─── Mobile Responsive (max-width: 767px) ────────────────────────────────── */
+@media (max-width: 767px) {
+  /* Hide the desktop sidebar entirely on mobile — the mobile topbar + bottomnav
+     are rendered by the Sidebar component using fixed positioning. */
+  .sidebar-desktop {
+    display: none !important;
+  }
+  /* The main area takes the full width when there's no desktop sidebar. */
+  main.flex-1 {
+    padding-top: calc(56px + env(safe-area-inset-top, 0px)) !important;
+    padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+  /* On mobile, every panel's main scroll container gets safe horizontal padding */
+  .agent-detail-drawer {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  .agent-detail-header {
+    padding: 0.75rem 1rem !important;
+  }
+  .agent-detail-body {
+    padding: 1rem !important;
+  }
+}
+
+@media (min-width: 768px) {
+  /* The mobile topbar / bottomnav / drawer / sheet only render at <md */
+  .mobile-topbar,
+  .mobile-bottomnav,
+  .mobile-drawer,
+  .mobile-more-sheet,
+  .mobile-drawer-overlay {
+    display: none !important;
+  }
+}
+
+.mobile-topbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: calc(56px + env(safe-area-inset-top, 0px));
+  padding-top: env(safe-area-inset-top, 0px);
+  background: var(--color-surface);
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+}
+
+.mobile-topbar-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 0.5rem;
+  background: transparent;
+  border: 1px solid var(--color-border);
+  color: var(--color-foreground);
+  cursor: pointer;
+}
+.mobile-topbar-btn:hover {
+  background: var(--color-surface-hover);
+}
+
+.mobile-bottomnav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: calc(64px + env(safe-area-inset-bottom, 0px));
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  background: var(--color-surface);
+  z-index: 30;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  align-items: center;
+  padding-left: 0.25rem;
+  padding-right: 0.25rem;
+}
+
+.mobile-bottomnav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0.4rem 0.25rem;
+  border-radius: 0.5rem;
+  text-align: center;
+  line-height: 1.1;
+}
+.mobile-bottomnav-item:hover {
+  background: var(--color-surface-hover);
+}
+.mobile-bottomnav-item[aria-current="page"] {
+  background: rgba(99, 102, 241, 0.1);
+}
+
+.mobile-drawer-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  z-index: 40;
+  animation: agent-detail-fade-in 0.18s ease-out;
+}
+
+.mobile-drawer {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 280px;
+  max-width: 85vw;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 8px 0 32px rgba(0, 0, 0, 0.45);
+  animation: mobile-drawer-slide-in 0.22s ease-out;
+}
+
+@keyframes mobile-drawer-slide-in {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
+
+.mobile-more-sheet {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  max-height: 70vh;
+  border-top-left-radius: 1rem;
+  border-top-right-radius: 1rem;
+  z-index: 50;
+  box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.45);
+  display: flex;
+  flex-direction: column;
+  animation: mobile-sheet-slide-up 0.22s ease-out;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+@keyframes mobile-sheet-slide-up {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
