@@ -6,14 +6,20 @@
 import * as fs from 'fs';
 import * as path from 'path';
 
-const VAULT_PATH = process.env.MYWIKI_PATH || '/home/z3r0b1nary/workspace/mywiki';
+const DEFAULT_VAULT_PATH = '/home/z3r0b1nary/workspace/mywiki';
+
+function resolveVaultPathFromEnv(): string {
+  return process.env.MISSION_CONTROL_MYWIKI_PATH?.trim()
+    || process.env.MYWIKI_PATH?.trim()
+    || DEFAULT_VAULT_PATH;
+}
 
 interface ExportOptions {
   vaultPath?: string;
 }
 
 function getResolvedVaultPath(options: ExportOptions = {}): string {
-  return options.vaultPath || VAULT_PATH;
+  return options.vaultPath || resolveVaultPathFromEnv();
 }
 
 function ensureVault(options: ExportOptions = {}): boolean {
@@ -26,11 +32,11 @@ function ensureVault(options: ExportOptions = {}): boolean {
 }
 
 export function getVaultPath(): string {
-  return VAULT_PATH;
+  return resolveVaultPathFromEnv();
 }
 
 export function isVaultAvailable(): boolean {
-  return fs.existsSync(VAULT_PATH);
+  return fs.existsSync(resolveVaultPathFromEnv());
 }
 
 /** Write a daily journal entry */
@@ -72,7 +78,7 @@ created: ${new Date().toISOString().split('T')[0]}
 /** List journal entries */
 export function listJournalEntries(): string[] {
   if (!ensureVault()) return [];
-  const sessionsDir = path.join(VAULT_PATH, 'sessions');
+  const sessionsDir = path.join(resolveVaultPathFromEnv(), 'sessions');
   if (!fs.existsSync(sessionsDir)) return [];
   return fs.readdirSync(sessionsDir)
     .filter((f) => f.endsWith('.md'))
@@ -82,7 +88,7 @@ export function listJournalEntries(): string[] {
 
 /** Read a journal entry */
 export function readJournalEntry(date: string): string | null {
-  const filePath = path.join(VAULT_PATH, 'sessions', `${date}-mission-control-log.md`);
+  const filePath = path.join(resolveVaultPathFromEnv(), 'sessions', `${date}-mission-control-log.md`);
   if (!fs.existsSync(filePath)) return null;
   return fs.readFileSync(filePath, 'utf-8');
 }

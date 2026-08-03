@@ -17,11 +17,26 @@ afterEach(() => {
   for (const dir of tempRoots.splice(0)) {
     fs.rmSync(dir, { recursive: true, force: true });
   }
+
+  delete process.env.MISSION_CONTROL_MYWIKI_PATH;
+  delete process.env.MYWIKI_PATH;
 });
 
 describe('obsidian export mywiki integration', () => {
   it('defaults to the shared mywiki vault path', () => {
     expect(getVaultPath()).toBe('/home/z3r0b1nary/workspace/mywiki');
+  });
+
+  it('prefers MISSION_CONTROL_MYWIKI_PATH when explicitly set', () => {
+    process.env.MISSION_CONTROL_MYWIKI_PATH = '/tmp/mission-control-mywiki';
+
+    expect(getVaultPath()).toBe('/tmp/mission-control-mywiki');
+  });
+
+  it('falls back to legacy MYWIKI_PATH when the canonical env var is unset', () => {
+    process.env.MYWIKI_PATH = '/tmp/legacy-mywiki';
+
+    expect(getVaultPath()).toBe('/tmp/legacy-mywiki');
   });
 
   it('writes session journal exports into the mywiki sessions folder', () => {

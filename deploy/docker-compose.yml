@@ -28,7 +28,7 @@ services:
     container_name: mission-control
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      - "${MISSION_CONTROL_BIND_HOST:-127.0.0.1}:${MISSION_CONTROL_HOST_PORT:-3001}:3000"
     environment:
       NODE_ENV: production
       RANKFORGE_URL: ${RANKFORGE_URL:-http://localhost:13001}

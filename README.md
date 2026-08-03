@@ -47,7 +47,7 @@ CLI agents can answer chat messages if they have a `chatCommand` template; featu
 
 ## Deployment
 
-See [DEPLOY.md](./DEPLOY.md) for the Docker / Hetzner guide. The compose file at `deploy/docker-compose.yml` ships a stateless Next.js container that mounts the Obsidian vault and reads every env var from a local `.env`.
+See [DEPLOY.md](./DEPLOY.md) for the Docker / host rollout guide. The compose file at `deploy/docker-compose.yml` ships a stateless Next.js container that mounts the Obsidian vault and should be paired with `deploy/.env` (template: `deploy/.env.example`). By default it binds loopback-only on `127.0.0.1:3001`.
 
 ## Architecture notes
 
