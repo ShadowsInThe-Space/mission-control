@@ -13,6 +13,7 @@ describe('agent registry', () => {
     expect(ids).toEqual([
       'hermes',
       'openclaw',
+      'buzz',
       'claude',
       'gemini',
       'mmx',
@@ -42,7 +43,7 @@ describe('agent registry', () => {
   });
 
   it('declares health checks for every feature service', () => {
-    for (const featureId of ['rankforge', 'firecrawl', 'notebooklm', 'blog-studio', 'image-studio', 'video-studio', 'podcast-studio', 'vision-studio']) {
+    for (const featureId of ['buzz', 'rankforge', 'firecrawl', 'notebooklm', 'blog-studio', 'image-studio', 'video-studio', 'podcast-studio', 'vision-studio']) {
       const agent = getAgentDefinition(featureId);
       expect(agent.health).toBeDefined();
       expect(agent.health?.defaultUrl).toMatch(/^https?:\/\//);
@@ -61,6 +62,7 @@ describe('agent registry', () => {
 
   it('omits chatCommand for non-chat agents', () => {
     expect(getAgentDefinition('openclaw').chatCommand).toBeUndefined();
+    expect(getAgentDefinition('buzz').chatCommand).toBeUndefined();
     expect(getAgentDefinition('blog-studio').chatCommand).toBeUndefined();
     expect(getAgentDefinition('notebooklm').chatCommand).toBeUndefined();
   });

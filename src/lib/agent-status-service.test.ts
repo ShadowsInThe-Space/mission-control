@@ -10,6 +10,7 @@ describe('agent status service', () => {
     expect(Object.keys(snapshot)).toEqual([
       'hermes',
       'openclaw',
+      'buzz',
       'claude',
       'gemini',
       'mmx',
@@ -28,6 +29,7 @@ describe('agent status service', () => {
     ]);
     expect(snapshot.claude.status).toBe('online');
     expect(snapshot.claude.version).toBe('ok');
+    expect(snapshot.buzz.status).toBe('unknown');
     expect(snapshot.rankforge.status).toBe('unknown');
   });
 
@@ -46,12 +48,14 @@ describe('agent status service', () => {
       runner: vi.fn().mockResolvedValue({ stdout: 'ok\n', stderr: '', exitCode: 0 }),
       fetcher: async (url) => {
         requestedUrls.push(url);
-        return { ok: url.includes('13001'), status: url.includes('13001') ? 200 : 503 };
+        const ok = url.includes('33110') || url.includes('13001');
+        return { ok, status: ok ? 200 : 503 };
       },
       env: {},
     });
 
-    // Only rankforge responds online; every other feature service is offline.
+    // Only buzz + rankforge respond online; every other feature service is offline.
+    expect(snapshot.buzz.status).toBe('online');
     expect(snapshot.rankforge.status).toBe('online');
     expect(snapshot.firecrawl.status).toBe('offline');
     expect(snapshot.notebooklm.status).toBe('offline');
@@ -60,6 +64,7 @@ describe('agent status service', () => {
     expect(snapshot['video-studio'].status).toBe('offline');
     expect(snapshot['podcast-studio'].status).toBe('offline');
     expect(snapshot['vision-studio'].status).toBe('offline');
+    expect(requestedUrls).toContain('http://127.0.0.1:33110/health');
     expect(requestedUrls).toContain('http://localhost:13001/api/health');
     expect(requestedUrls).toContain('http://127.0.0.1:8770/api/health');
     expect(requestedUrls).toContain('http://127.0.0.1:8774/api/health');
@@ -87,6 +92,8 @@ describe('agent status service', () => {
 
     expect(snapshot.rankforge.status).toBe('offline');
     expect(snapshot.rankforge.info.error).toBe('ECONNREFUSED');
+    expect(snapshot.buzz.status).toBe('offline');
+    expect(snapshot.buzz.info.error).toBe('ECONNREFUSED');
     expect(snapshot.firecrawl.status).toBe('offline');
     expect(snapshot.firecrawl.info.error).toBe('ECONNREFUSED');
   });

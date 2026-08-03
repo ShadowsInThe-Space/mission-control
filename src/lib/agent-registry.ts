@@ -1,6 +1,7 @@
 export type AgentId =
   | 'hermes'
   | 'openclaw'
+  | 'buzz'
   | 'claude'
   | 'gemini'
   | 'mmx'
@@ -103,6 +104,36 @@ export const AGENT_DEFINITIONS: AgentDefinition[] = [
       version: { bin: 'openclaw', args: ['--version'], timeoutMs: 10_000 },
       help: { bin: 'openclaw', args: ['--help'], timeoutMs: 10_000 },
     },
+  },
+  {
+    id: 'buzz',
+    label: 'Buzz Relay',
+    kind: 'feature',
+    description: 'Self-hosted Buzz relay and workspace backend for rooms, agents, workflows, and signed team events.',
+    capabilities: ['health', 'relay', 'workspace', 'events', 'agents'],
+    actions: {},
+    health: {
+      envVar: 'BUZZ_RELAY_HTTP_URL',
+      defaultUrl: 'http://127.0.0.1:33110',
+      path: '/health',
+      timeoutMs: 5_000,
+    },
+    httpEndpoints: [
+      {
+        id: 'liveness',
+        method: 'GET',
+        path: '/_liveness',
+        label: 'Relay liveness',
+        description: 'Fast unauthenticated liveness probe exposed by the Buzz relay.',
+      },
+      {
+        id: 'readiness',
+        method: 'GET',
+        path: '/_readiness',
+        label: 'Relay readiness',
+        description: 'Readiness probe for the Buzz relay and its backing dependencies.',
+      },
+    ],
   },
   {
     id: 'claude',
