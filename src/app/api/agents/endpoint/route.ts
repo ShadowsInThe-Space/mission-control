@@ -10,6 +10,11 @@ interface EndpointRequest {
   params?: Record<string, string | number | boolean>;
 }
 
+interface UpstreamRequestShape {
+  body?: string;
+  headers?: Record<string, string>;
+}
+
 /**
  * POST /api/agents/endpoint
  *
@@ -76,6 +81,15 @@ export async function POST(request: Request) {
   // POST requests get them in the JSON body.
   let url: string;
   let fetchInit: RequestInit;
+  let upstreamShape: UpstreamRequestShape;
+  try {
+    upstreamShape = buildUpstreamRequestShape(agentId, endpoint.method, params);
+  } catch (e) {
+    return NextResponse.json(
+      { ok: false, error: e instanceof Error ? e.message : String(e) },
+      { status: 400 }
+    );
+  }
   if (endpoint.method === 'GET') {
     const qs = new URLSearchParams();
     for (const [k, v] of Object.entries(params || {})) {
@@ -88,8 +102,8 @@ export async function POST(request: Request) {
     url = `${baseUrl.replace(/\/$/, '')}${endpoint.path}`;
     fetchInit = {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(params || {}),
+      headers: { 'Content-Type': 'application/json', ...(upstreamShape.headers || {}) },
+      body: upstreamShape.body ?? JSON.stringify(params || {}),
       signal: AbortSignal.timeout(15_000),
     };
   }
@@ -123,4 +137,33 @@ function resolveBaseUrl(agentId: string, definition: ReturnType<typeof getAgentD
     if (envVal && envVal.trim()) return envVal.trim();
   }
   return definition.health?.defaultUrl || '';
+}
+
+function buildUpstreamRequestShape(
+  agentId: string,
+  method: 'GET' | 'POST',
+  params?: Record<string, string | number | boolean>
+): UpstreamRequestShape {
+  const headers: Record<string, string> = {};
+
+  if (agentId === 'buzz') {
+    const pubkey = process.env.BUZZ_DEV_PUBKEY?.trim();
+    if (pubkey) headers['X-Pubkey'] = pubkey;
+  }
+
+  if (method !== 'POST') return { headers };
+
+  const rawPayload = params?.payload;
+  if (typeof rawPayload === 'string' && rawPayload.trim()) {
+    try {
+      return {
+        headers,
+        body: JSON.stringify(JSON.parse(rawPayload)),
+      };
+    } catch (error) {
+      throw new Error(`payload must be valid JSON: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
+
+  return { headers };
 }

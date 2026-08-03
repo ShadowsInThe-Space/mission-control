@@ -133,6 +133,22 @@ export const AGENT_DEFINITIONS: AgentDefinition[] = [
         label: 'Relay readiness',
         description: 'Readiness probe for the Buzz relay and its backing dependencies.',
       },
+      {
+        id: 'count-events',
+        method: 'POST',
+        path: '/count',
+        label: 'Count events',
+        description: 'Run a NIP-45 count query against the Buzz relay. Pass raw filter-array JSON in payload.',
+        params: [{ name: 'payload', label: 'Raw JSON payload', required: true, placeholder: '[{"kinds":[39002]}]' }],
+      },
+      {
+        id: 'query-events',
+        method: 'POST',
+        path: '/query',
+        label: 'Query events',
+        description: 'Run a NIP-01 query against the Buzz relay. Pass raw filter-array JSON in payload.',
+        params: [{ name: 'payload', label: 'Raw JSON payload', required: true, placeholder: '[{"kinds":[39002],"limit":5}]' }],
+      },
     ],
   },
   {
