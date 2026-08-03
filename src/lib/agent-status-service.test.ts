@@ -9,6 +9,7 @@ describe('agent status service', () => {
 
     expect(Object.keys(snapshot)).toEqual([
       'hermes',
+      'lepsy',
       'openclaw',
       'buzz',
       'claude',
@@ -29,6 +30,7 @@ describe('agent status service', () => {
     ]);
     expect(snapshot.claude.status).toBe('online');
     expect(snapshot.claude.version).toBe('ok');
+    expect(snapshot.lepsy.status).toBe('unknown');
     expect(snapshot.buzz.status).toBe('unknown');
     expect(snapshot.rankforge.status).toBe('unknown');
   });
@@ -48,13 +50,14 @@ describe('agent status service', () => {
       runner: vi.fn().mockResolvedValue({ stdout: 'ok\n', stderr: '', exitCode: 0 }),
       fetcher: async (url) => {
         requestedUrls.push(url);
-        const ok = url.includes('33110') || url.includes('13001');
+        const ok = url.includes('18642') || url.includes('33110') || url.includes('13001');
         return { ok, status: ok ? 200 : 503 };
       },
       env: {},
     });
 
-    // Only buzz + rankforge respond online; every other feature service is offline.
+    // Only lepsy + buzz + rankforge respond online; every other feature service is offline.
+    expect(snapshot.lepsy.status).toBe('online');
     expect(snapshot.buzz.status).toBe('online');
     expect(snapshot.rankforge.status).toBe('online');
     expect(snapshot.firecrawl.status).toBe('offline');
@@ -64,6 +67,7 @@ describe('agent status service', () => {
     expect(snapshot['video-studio'].status).toBe('offline');
     expect(snapshot['podcast-studio'].status).toBe('offline');
     expect(snapshot['vision-studio'].status).toBe('offline');
+    expect(requestedUrls).toContain('http://127.0.0.1:18642/health');
     expect(requestedUrls).toContain('http://127.0.0.1:33110/health');
     expect(requestedUrls).toContain('http://localhost:13001/api/health');
     expect(requestedUrls).toContain('http://127.0.0.1:8770/api/health');

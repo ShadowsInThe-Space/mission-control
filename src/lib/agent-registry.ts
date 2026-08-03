@@ -1,5 +1,6 @@
 export type AgentId =
   | 'hermes'
+  | 'lepsy'
   | 'openclaw'
   | 'buzz'
   | 'claude'
@@ -92,6 +93,20 @@ export const AGENT_DEFINITIONS: AgentDefinition[] = [
       bin: 'hermes',
       args: ['-z', '-p', '{{message}}'],
       timeoutMs: 120_000,
+    },
+  },
+  {
+    id: 'lepsy',
+    label: 'Lepsy Hermes',
+    kind: 'feature',
+    description: 'SSH-tunnel-backed Hermes API server from the secondary dev laptop lepsy for LAN multi-agent orchestration.',
+    capabilities: ['health', 'secondary-dev', 'multiagent', 'remote-hermes'],
+    actions: {},
+    health: {
+      envVar: 'LEPSY_HERMES_URL',
+      defaultUrl: 'http://127.0.0.1:18642',
+      path: '/health',
+      timeoutMs: 5_000,
     },
   },
   {

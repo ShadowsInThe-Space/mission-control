@@ -33,15 +33,18 @@ interface MonitoringTarget {
 }
 
 function createMonitoringTargets(origin: string): MonitoringTarget[] {
+  const lepsyHermesUrl = `${(process.env.LEPSY_HERMES_URL || 'http://127.0.0.1:18642').replace(/\/$/, '')}/health`;
+
   return [
     { id: 'mission-control', label: 'Mission Control', category: 'local', url: `${origin.replace(/\/$/, '')}/api/health`, essential: true },
-  { id: 'hermes-gateway', label: 'Hermes Gateway', category: 'local', url: 'http://127.0.0.1:8642/health', essential: true },
-  { id: 'hermes-dashboard', label: 'Hermes Dashboard', category: 'local', url: 'http://127.0.0.1:9119/api/status', essential: true },
-  { id: 'hermes-workspace', label: 'Hermes Workspace', category: 'local', url: 'http://127.0.0.1:3000/', essential: false },
-  { id: 'firecrawl', label: 'Firecrawl', category: 'application', url: 'http://127.0.0.1:3002/v0/health', essential: false },
-  { id: 'rankforge', label: 'RankForge', category: 'application', url: 'http://127.0.0.1:13001/api/health', essential: false },
-  { id: 'mothership-netdata', label: 'Mothership Metrics', category: 'mothership', url: 'http://127.0.0.1:19999/api/v1/info', essential: true },
-  { id: 'mothership-dozzle', label: 'Mothership Logs', category: 'mothership', url: 'http://127.0.0.1:8080/', essential: false },
+    { id: 'hermes-gateway', label: 'Hermes Gateway', category: 'local', url: 'http://127.0.0.1:8642/health', essential: true },
+    { id: 'lepsy-hermes', label: 'Lepsy Hermes', category: 'application', url: lepsyHermesUrl, essential: true },
+    { id: 'hermes-dashboard', label: 'Hermes Dashboard', category: 'local', url: 'http://127.0.0.1:9119/api/status', essential: true },
+    { id: 'hermes-workspace', label: 'Hermes Workspace', category: 'local', url: 'http://127.0.0.1:3000/', essential: false },
+    { id: 'firecrawl', label: 'Firecrawl', category: 'application', url: 'http://127.0.0.1:3002/v0/health', essential: false },
+    { id: 'rankforge', label: 'RankForge', category: 'application', url: 'http://127.0.0.1:13001/api/health', essential: false },
+    { id: 'mothership-netdata', label: 'Mothership Metrics', category: 'mothership', url: 'http://127.0.0.1:19999/api/v1/info', essential: true },
+    { id: 'mothership-dozzle', label: 'Mothership Logs', category: 'mothership', url: 'http://127.0.0.1:8080/', essential: false },
   ];
 }
 

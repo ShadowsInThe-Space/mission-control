@@ -12,6 +12,7 @@ describe('agent registry', () => {
 
     expect(ids).toEqual([
       'hermes',
+      'lepsy',
       'openclaw',
       'buzz',
       'claude',
@@ -43,7 +44,7 @@ describe('agent registry', () => {
   });
 
   it('declares health checks for every feature service', () => {
-    for (const featureId of ['buzz', 'rankforge', 'firecrawl', 'notebooklm', 'blog-studio', 'image-studio', 'video-studio', 'podcast-studio', 'vision-studio']) {
+    for (const featureId of ['lepsy', 'buzz', 'rankforge', 'firecrawl', 'notebooklm', 'blog-studio', 'image-studio', 'video-studio', 'podcast-studio', 'vision-studio']) {
       const agent = getAgentDefinition(featureId);
       expect(agent.health).toBeDefined();
       expect(agent.health?.defaultUrl).toMatch(/^https?:\/\//);

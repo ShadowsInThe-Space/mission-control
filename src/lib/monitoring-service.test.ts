@@ -17,6 +17,10 @@ describe('monitoring service', () => {
       status: 'online',
       category: 'local',
     });
+    expect(snapshot.services.find((service) => service.id === 'lepsy-hermes')).toMatchObject({
+      status: 'online',
+      category: 'application',
+    });
     expect(snapshot.services.find((service) => service.id === 'mothership-netdata')).toMatchObject({
       status: 'online',
       category: 'mothership',
@@ -25,6 +29,7 @@ describe('monitoring service', () => {
       status: 'offline',
     });
     expect(requestedUrls).toContain('http://127.0.0.1:8642/health');
+    expect(requestedUrls).toContain('http://127.0.0.1:18642/health');
     expect(requestedUrls).toContain('http://127.0.0.1:19999/api/v1/info');
   });
 
