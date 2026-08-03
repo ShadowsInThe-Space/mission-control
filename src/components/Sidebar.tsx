@@ -22,17 +22,18 @@ import {
   Menu,
   X,
   MoreHorizontal,
+  Activity,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
 type ViewId =
   | 'sessions' | 'kanban' | 'logs' | 'seo' | 'agents' | 'handoff' | 'memory'
-  | 'image-studio' | 'video-studio' | 'music-studio' | 'podcast-studio' | 'vision-studio' | 'blog-studio';
+  | 'image-studio' | 'video-studio' | 'music-studio' | 'podcast-studio' | 'vision-studio' | 'blog-studio' | 'monitoring';
 
 // On mobile we show 4 main items in the bottom-nav and put the rest behind
 // the "More" sheet. The desktop sidebar still shows all 13.
 const MOBILE_PRIMARY_IDS: ViewId[] = ['sessions', 'kanban', 'agents', 'memory'];
-const MOBILE_MORE_IDS: ViewId[] = ['logs', 'seo', 'handoff', 'image-studio', 'video-studio', 'music-studio', 'podcast-studio', 'vision-studio', 'blog-studio'];
+const MOBILE_MORE_IDS: ViewId[] = ['logs', 'seo', 'handoff', 'monitoring', 'image-studio', 'video-studio', 'music-studio', 'podcast-studio', 'vision-studio', 'blog-studio'];
 
 const NAV_ITEMS: Array<{ id: ViewId; icon: typeof MessageSquare; label: string }> = [
   { id: 'sessions', icon: MessageSquare, label: 'Sessions' },
@@ -42,6 +43,7 @@ const NAV_ITEMS: Array<{ id: ViewId; icon: typeof MessageSquare; label: string }
   { id: 'agents', icon: Cpu, label: 'Agents' },
   { id: 'handoff', icon: ArrowRightLeft, label: 'Handoff' },
   { id: 'memory', icon: Brain, label: 'Memory' },
+  { id: 'monitoring', icon: Activity, label: 'Monitor' },
   { id: 'image-studio', icon: Image, label: 'Image' },
   { id: 'video-studio', icon: Video, label: 'Video' },
   { id: 'music-studio', icon: Music, label: 'Music' },

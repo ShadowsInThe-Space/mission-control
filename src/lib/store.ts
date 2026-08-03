@@ -125,7 +125,7 @@ export interface LogEntry {
 
 interface AppState {
   // UI
-  activeView: 'sessions' | 'kanban' | 'logs' | 'seo' | 'agents' | 'handoff' | 'memory' | 'image-studio' | 'video-studio' | 'music-studio' | 'podcast-studio' | 'vision-studio' | 'blog-studio';
+  activeView: 'sessions' | 'kanban' | 'logs' | 'seo' | 'agents' | 'handoff' | 'memory' | 'image-studio' | 'video-studio' | 'music-studio' | 'podcast-studio' | 'vision-studio' | 'blog-studio' | 'monitoring';
   sidebarCollapsed: boolean;
   setActiveView: (v: AppState['activeView']) => void;
   toggleSidebar: () => void;

@@ -16,6 +16,7 @@ import MusicStudio from '@/components/MusicStudio';
 import PodcastStudio from '@/components/PodcastStudio';
 import VisionStudio from '@/components/VisionStudio';
 import BlogStudio from '@/components/BlogStudio';
+import MonitoringPanel from '@/components/MonitoringPanel';
 
 export default function Home() {
   const { activeView } = useStore();
@@ -37,6 +38,7 @@ export default function Home() {
         {activeView === 'podcast-studio' && <PodcastStudio />}
         {activeView === 'vision-studio' && <VisionStudio />}
         {activeView === 'blog-studio' && <BlogStudio />}
+        {activeView === 'monitoring' && <MonitoringPanel />}
       </main>
       <AgentDetailPanel />
     </div>
