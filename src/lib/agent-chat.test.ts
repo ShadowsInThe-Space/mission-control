@@ -37,10 +37,10 @@ describe('buildAgentChatCommand', () => {
     });
   });
 
-  it('routes Hermes oneshot chat via hermes -z -p', () => {
+  it('routes Hermes oneshot chat via hermes -z', () => {
     expect(buildAgentChatCommand('hermes', 'ping')).toEqual({
       bin: 'hermes',
-      args: ['-z', '-p', 'ping'],
+      args: ['-z', 'ping'],
       timeoutMs: 120000,
       mode: 'append',
     });

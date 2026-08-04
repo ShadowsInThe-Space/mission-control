@@ -69,10 +69,8 @@ export default function Sidebar() {
   }, []);
 
   // Close More sheet on view change
-  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { setMoreOpen(false); }, [activeView]);
   // Close drawer on view change
-  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { setDrawerOpen(false); }, [activeView]);
 
   const onlineCount = sessions.filter((s) => s.status === 'active').length;

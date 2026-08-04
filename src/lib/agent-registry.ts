@@ -91,7 +91,7 @@ export const AGENT_DEFINITIONS: AgentDefinition[] = [
     },
     chatCommand: {
       bin: 'hermes',
-      args: ['-z', '-p', '{{message}}'],
+      args: ['-z', '{{message}}'],
       timeoutMs: 120_000,
     },
   },

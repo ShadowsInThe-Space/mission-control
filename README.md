@@ -22,7 +22,7 @@ npm run dev                       # http://localhost:3000
 | `npm run start`     | Run the production build                         |
 | `npm run lint`      | ESLint (Next + TypeScript rules)                 |
 | `npm run typecheck` | TypeScript no-emit check                         |
-| `npm test`          | Vitest (32 → 46 tests across 7 files)            |
+| `npm test`          | Vitest (75 tests across 11 files)            |
 | `npm run test:watch`| Vitest watch mode                                |
 
 ## Endpoints
@@ -34,16 +34,23 @@ npm run dev                       # http://localhost:3000
 | `/api/agents/chat`     | Chat bridge (POST `{ agentId, message }`)            |
 | `/api/seo/scrape`      | RankForge-backed audit trigger (needs `RANKFORGE_API_KEY`) |
 | `/api/obsidian`        | mywiki vault listing / sync                          |
+| `/api/agents/endpoint` | Generic HTTP proxy for agent sub-endpoints (Buzz `/query`, Ollama `/api/tags`, …) |
+| `/api/agents/action`   | Run an allowlisted CLI action for an agent           |
+| `/api/handoff`         | Cross-agent handoff primitive (vault write, chain patterns) |
+| `/api/monitoring`      | System monitoring snapshot (local + tunnel services)  |
+| `/api/seo/analyze`     | Local SEO heuristic (score / issues / recommendations, no backend needed) |
+| `/api/studios/*`       | Content studios: blog, image, video, music, podcast, vision |
+| `/api/github/memory`   | Read / edit / commit / search the mywiki GitHub vault |
 
 ## Registered agents
 
-The agent registry in `src/lib/agent-registry.ts` is the single source of truth. As of M2 it knows about 17 agents across four kinds:
+The agent registry in `src/lib/agent-registry.ts` is the single source of truth. It currently knows about **19 agents** across four kinds:
 
 - **CLI agents** (8): `hermes`, `openclaw`, `claude`, `gemini`, `mmx`, `codex`, `ollama`, `antigravity`
-- **Feature services** (8): `rankforge`, `firecrawl`, `notebooklm`, `blog-studio`, `image-studio`, `video-studio`, `podcast-studio`, `vision-studio`
+- **Feature services** (9): `buzz` (self-hosted Buzz relay), `lepsy` (SSH-tunnel-backed Hermes on the secondary dev laptop), `rankforge`, `firecrawl`, `notebooklm`, `blog-studio`, `image-studio`, `video-studio`, `podcast-studio`, `vision-studio`
 - **Workspace** (1): `mywiki`
 
-CLI agents can answer chat messages if they have a `chatCommand` template; feature services expose health probes via `health`.
+CLI agents can answer chat messages if they have a `chatCommand` template; feature services expose health probes via `health`. The `buzz` and `lepsy` feature agents additionally expose HTTP sub-endpoints (`/_liveness`, `/count`, `/query` for Buzz) through the generic `/api/agents/endpoint` proxy.
 
 ## Deployment
 
@@ -52,15 +59,19 @@ See [DEPLOY.md](./DEPLOY.md) for the Docker / host rollout guide. The compose fi
 ## Architecture notes
 
 - **No new core model tools** are added in M2. Everything goes through the existing `agent-registry` + `agent-status-service` + `agent-chat` libs.
-- **The 9 remaining lint warnings** are pre-existing in uncommitted SEO/Sessions/Kanban files. M1 deliberately did not touch them. Run `npm run lint` to see the list.
+- **Tests**: 75 passing across 11 files (lib cores + the `agents/endpoint` API route). Run `npm test` to verify. API-route and studio coverage is still thin — only 1 of 22 API routes has a co-located test.
+- **Lint**: 0 errors, 5 warnings (1 Next.js custom-font hint + 4 intentionally-retained store actions in `SEOPanel` for not-yet-wired UI features).
 - **The `chatCommand` template** is per-agent; the runtime in `agent-chat.ts` substitutes `{{message}}` or appends the message as the last positional arg.
+- **Content studios** (`/api/studios/*`): `blog` routes to the Claude CLI directly (real backend); `image` / `video` / `music` / `podcast` / `vision` are honest proxies that return 503 + a fallback command when their backend service is not running. `/api/seo/analyze` is a fully local heuristic and needs no backend.
+
+> **Dev tip:** if `/api/*` routes return `500 TypeError: components.ComponentMod.handler is not a function`, wipe `.next` (`rm -rf .next`) and restart `npm run dev` — a stale Turbopack cache is the usual cause.
 
 ---
 
 ## Features
 
 ### 🖥️ Agent Bridge
-- **Live-Status** aller drei Agents via CLI-Bridge
+- **Live-Status** aller registrierten Agents (19 via Registry) über CLI- und HTTP-Bridge
 - Auto-Refresh alle 30 Sekunden
 - Manueller Refresh-Button
 - Installationshinweise wenn ein Agent offline ist

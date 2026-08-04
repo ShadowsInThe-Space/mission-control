@@ -156,10 +156,8 @@ export default function GitHubMemoryPanel() {
   useEffect(() => {
     const t = setTimeout(() => {
       if (searchQuery.trim().length >= 2) {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
         void runSearch(searchQuery);
       } else {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
         setSearchHits(null);
       }
     }, 350);

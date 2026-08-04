@@ -168,8 +168,6 @@ function OverviewTab() {
 
 function AuditDashboard({ record, projectName }: { record: import('@/lib/store').SEORecord; projectName: string }) {
   const score = record.score;
-  const scoreColor = score > 70 ? 'text-green-400' : score > 40 ? 'text-yellow-400' : 'text-red-400';
-  const scoreBg = score > 70 ? 'bg-green-500/20' : score > 40 ? 'bg-yellow-500/20' : 'bg-red-500/20';
   const grade = scoreToGrade(score);
   const gradeColor = gradeToColor(grade);
 

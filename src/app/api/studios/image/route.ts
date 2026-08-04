@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server';
-import { spawn } from 'child_process';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';

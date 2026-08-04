@@ -5,7 +5,7 @@
 
 
 import { useState, useEffect, useCallback } from 'react';
-import { Play, RefreshCw, Save, Image as ImageIcon, AlertCircle, CheckCircle2, Send, Music, Video, Mic, Eye, FileText, Loader2 } from 'lucide-react';
+import { Image as ImageIcon, AlertCircle, CheckCircle2, Send, Music, Video, Mic, Eye, FileText, Loader2 } from 'lucide-react';
 
 export interface StudioField {
   name: string;

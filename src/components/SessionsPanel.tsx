@@ -116,7 +116,6 @@ function NewSessionModal({ onClose }: { onClose: () => void }) {
 
   function handleCreate() {
     if (!title.trim()) return;
-    const id = `s${Date.now()}`;
     addSession({
       agentType,
       title: title.trim(),
@@ -182,7 +181,7 @@ function NewSessionModal({ onClose }: { onClose: () => void }) {
 }
 
 export default function SessionsPanel() {
-  const { sessions, activeSessionId, setActiveSession, addSession, removeSession, sendMessage } = useStore();
+  const { sessions, activeSessionId, setActiveSession, removeSession, sendMessage } = useStore();
   const [showNewSession, setShowNewSession] = useState(false);
   const [sending, setSending] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);

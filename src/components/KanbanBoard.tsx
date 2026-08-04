@@ -233,7 +233,7 @@ function TaskModal({ onClose }: { onClose: () => void }) {
 }
 
 export default function KanbanBoard() {
-  const { tasks, addTask, moveTask, removeTask } = useStore();
+  const { tasks, moveTask, removeTask } = useStore();
   const [showModal, setShowModal] = useState(false);
 
   const sensors = useSensors(

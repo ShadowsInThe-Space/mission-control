@@ -39,8 +39,11 @@ export default function MonitoringPanel() {
   }, []);
 
   useEffect(() => {
-    void refresh();
-    const interval = window.setInterval(() => void refresh(), 15_000);
+    // Defer refresh() out of the synchronous effect to avoid cascading renders.
+    // Same pattern as AgentsPanel (commit e80f96a): mount + periodic refresh.
+    const tick = () => setTimeout(() => void refresh(), 0);
+    tick();
+    const interval = window.setInterval(tick, 15_000);
     return () => window.clearInterval(interval);
   }, [refresh]);
 

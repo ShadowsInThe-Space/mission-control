@@ -31,7 +31,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: 'Invalid JSON body' }, { status: 400 });
   }
 
-  const { agentId, action, params: _params } = body || {};
+  const { agentId, action } = body || {};
   if (!agentId || typeof agentId !== 'string') {
     return NextResponse.json({ ok: false, error: 'agentId is required' }, { status: 400 });
   }
