@@ -125,7 +125,7 @@ export interface LogEntry {
 
 interface AppState {
   // UI
-  activeView: 'sessions' | 'kanban' | 'logs' | 'seo' | 'agents' | 'handoff' | 'memory' | 'image-studio' | 'video-studio' | 'music-studio' | 'podcast-studio' | 'vision-studio' | 'blog-studio' | 'monitoring' | 'help';
+  activeView: 'sessions' | 'kanban' | 'logs' | 'seo' | 'agents' | 'handoff' | 'memory' | 'image-studio' | 'video-studio' | 'music-studio' | 'podcast-studio' | 'vision-studio' | 'blog-studio' | 'monitoring' | 'help' | 'buzz-channel';
   sidebarCollapsed: boolean;
   hintsEnabled: boolean;
   setActiveView: (v: AppState['activeView']) => void;
@@ -333,6 +333,16 @@ export const useStore = create<AppState>((set) => ({
       const data = await res.json();
       if (data.reply) {
         useStore.getState().addMessage(sessionId, { role: 'agent', content: data.reply });
+
+        // Bridge the exchange into the Buzz channel so other agents and the
+        // human operator can follow along. Fire-and-forget — must not block
+        // the chat UI. Only posts if a channel is bootstrapped.
+        const buzzContent = `**${session.agentType}** ← \`${content.slice(0, 120)}\`\n\n${data.reply.slice(0, 500)}`;
+        fetch('/api/buzz/send', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ agentId: session.agentType, content: buzzContent }),
+        }).catch(() => { /* Buzz is optional — silently ignore */ });
       } else if (data.error) {
         useStore.getState().addMessage(sessionId, { role: 'system', content: `Error: ${data.error}` });
       }

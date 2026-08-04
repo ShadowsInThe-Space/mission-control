@@ -186,13 +186,19 @@ export async function readChannel(
   }
 
   // Parse the JSON array returned by `buzz messages get`
-  const raw = Array.isArray(result.data) ? result.data : [];
-  const messages: BuzzMessage[] = raw.map((entry: any) => ({
-    id: entry.id ?? '',
-    content: entry.content ?? '',
-    author: entry.pubkey ?? entry.author ?? '',
-    createdAt: entry.created_at ? entry.created_at * 1000 : (entry.createdAt ?? 0),
-    replyTo: entry.reply_to ?? undefined,
+  const raw = (Array.isArray(result.data) ? result.data : []) as Record<string, unknown>[];
+  const messages: BuzzMessage[] = raw.map((entry) => ({
+    id: (entry.id as string | undefined) ?? '',
+    content: (entry.content as string | undefined) ?? '',
+    author:
+      (entry.pubkey as string | undefined) ??
+      (entry.author as string | undefined) ??
+      '',
+    createdAt:
+      typeof entry.created_at === 'number'
+        ? entry.created_at * 1000
+        : (entry.createdAt as number | undefined) ?? 0,
+    replyTo: (entry.reply_to as string | undefined) ?? undefined,
   }));
 
   return { ok: true, messages };
@@ -224,12 +230,12 @@ export async function createChannel(
   }
 
   // The CLI returns the created channel object
-  const ch = result.data as any;
+  const ch = (result.data ?? {}) as Record<string, unknown>;
   const channel: BuzzChannel = {
-    id: ch?.id ?? ch?.h ?? '',
-    name: ch?.name ?? name,
-    type: ch?.type ?? 'stream',
-    visibility: ch?.visibility ?? 'open',
+    id: (ch.id as string | undefined) ?? (ch.h as string | undefined) ?? '',
+    name: (ch.name as string | undefined) ?? name,
+    type: (ch.type as string | undefined) ?? 'stream',
+    visibility: (ch.visibility as string | undefined) ?? 'open',
   };
 
   return { ok: true, channel };
@@ -256,12 +262,12 @@ export async function listChannels(
     return { ok: false, channels: [], error: result.stderr || `CLI exited ${result.exitCode}` };
   }
 
-  const raw = Array.isArray(result.data) ? result.data : [];
-  const channels: BuzzChannel[] = raw.map((ch: any) => ({
-    id: ch.id ?? ch.h ?? '',
-    name: ch.name ?? '',
-    type: ch.type ?? '',
-    visibility: ch.visibility ?? '',
+  const raw = (Array.isArray(result.data) ? result.data : []) as Record<string, unknown>[];
+  const channels: BuzzChannel[] = raw.map((ch) => ({
+    id: (ch.id as string | undefined) ?? (ch.h as string | undefined) ?? '',
+    name: (ch.name as string | undefined) ?? '',
+    type: (ch.type as string | undefined) ?? '',
+    visibility: (ch.visibility as string | undefined) ?? '',
   }));
 
   return { ok: true, channels };

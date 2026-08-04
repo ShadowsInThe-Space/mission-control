@@ -5,7 +5,7 @@ vi.mock('child_process', () => ({
   spawn: vi.fn(),
 }));
 
-import { spawn } from 'child_process';
+import { spawn, type ChildProcessWithoutNullStreams } from 'child_process';
 import {
   resolveAgentKey,
   hasBuzzKey,
@@ -18,7 +18,7 @@ const mockedSpawn = vi.mocked(spawn);
 
 /** Build a fake child process that emits stdout/stderr and exits. */
 function fakeChild(opts: { stdout?: string; stderr?: string; exitCode?: number }) {
-  const handlers: Record<string, ((...args: any[]) => void)[]> = {};
+  const handlers: Record<string, ((...args: unknown[]) => void)[]> = {};
   const child = {
     stdout: { on: (ev: string, cb: (c: Buffer) => void) => {
       if (ev === 'data' && opts.stdout) setTimeout(() => cb(Buffer.from(opts.stdout!)), 1);
@@ -26,7 +26,7 @@ function fakeChild(opts: { stdout?: string; stderr?: string; exitCode?: number }
     stderr: { on: (ev: string, cb: (c: Buffer) => void) => {
       if (ev === 'data' && opts.stderr) setTimeout(() => cb(Buffer.from(opts.stderr!)), 1);
     }},
-    on: (ev: string, cb: (...args: any[]) => void) => {
+    on: (ev: string, cb: (...args: unknown[]) => void) => {
       (handlers[ev] ??= []).push(cb);
       if (ev === 'close') setTimeout(() => cb(opts.exitCode ?? 0), 5);
     },
@@ -96,7 +96,7 @@ describe('sendToChannel', () => {
     mockedSpawn.mockReturnValue(fakeChild({
       stdout: '{"id":"evt-1","ok":true}',
       exitCode: 0,
-    }) as any);
+    }) as unknown as ChildProcessWithoutNullStreams);
 
     const result = await sendToChannel('channel-uuid', 'hermes', 'Hello agents!');
     expect(result.ok).toBe(true);
@@ -130,7 +130,7 @@ describe('readChannel', () => {
         { id: 'evt-2', content: 'World', pubkey: 'pk2', created_at: 1700000001, reply_to: 'evt-1' },
       ]),
       exitCode: 0,
-    }) as any);
+    }) as unknown as ChildProcessWithoutNullStreams);
 
     const result = await readChannel('ch-1', 'hermes', 10);
     expect(result.ok).toBe(true);
@@ -144,7 +144,7 @@ describe('readChannel', () => {
     mockedSpawn.mockReturnValue(fakeChild({
       stderr: '{"error":"auth_error"}',
       exitCode: 3,
-    }) as any);
+    }) as unknown as ChildProcessWithoutNullStreams);
 
     const result = await readChannel('ch-1', 'hermes');
     expect(result.ok).toBe(false);
@@ -165,7 +165,7 @@ describe('createChannel', () => {
     mockedSpawn.mockReturnValue(fakeChild({
       stdout: JSON.stringify({ id: 'new-uuid-1234', name: 'test-channel', type: 'stream', visibility: 'open' }),
       exitCode: 0,
-    }) as any);
+    }) as unknown as ChildProcessWithoutNullStreams);
 
     const result = await createChannel('test-channel', 'hermes');
     expect(result.ok).toBe(true);

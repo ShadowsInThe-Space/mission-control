@@ -19,6 +19,7 @@ import VisionStudio from '@/components/VisionStudio';
 import BlogStudio from '@/components/BlogStudio';
 import MonitoringPanel from '@/components/MonitoringPanel';
 import HelpPanel from '@/components/HelpPanel';
+import BuzzChannelPanel from '@/components/BuzzChannelPanel';
 
 export default function Home() {
   const { activeView, hintsEnabled } = useStore();
@@ -47,6 +48,7 @@ export default function Home() {
         {activeView === 'blog-studio' && <BlogStudio />}
         {activeView === 'monitoring' && <MonitoringPanel />}
         {activeView === 'help' && <HelpPanel />}
+        {activeView === 'buzz-channel' && <BuzzChannelPanel />}
       </main>
       <AgentDetailPanel />
     </div>
