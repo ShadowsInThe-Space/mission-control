@@ -39,3 +39,6 @@ next-env.d.ts
 
 # Misc
 *.log
+
+# Buzz keys (per-agent Nostr private keys — SECRETS)
+scripts/buzz-keys.json
