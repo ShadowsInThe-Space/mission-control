@@ -6,6 +6,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Image as ImageIcon, AlertCircle, CheckCircle2, Send, Music, Video, Mic, Eye, FileText, Loader2 } from 'lucide-react';
+import Hint from '@/components/Hint';
 
 export interface StudioField {
   name: string;
@@ -215,6 +216,7 @@ export default function StudioShell({ config }: { config: StudioConfig }) {
             <div>
               <label className="text-xs font-semibold uppercase tracking-wider block mb-1.5" style={{ color: 'var(--color-muted)' }}>
                 {config.primaryField.label}
+                <Hint tip="Haupt-Eingabefeld für diesen Studio. Beschreibe was du erzeugen willst (Bild, Video, Blog etc.). Strg/⌘+Enter startet die Generierung." />
               </label>
               <textarea
                 rows={config.primaryField.rows || 3}

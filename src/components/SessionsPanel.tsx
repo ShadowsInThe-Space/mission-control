@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useStore, type ChatMessage, type AgentType } from '@/lib/store';
 import { MessageSquare, Plus, Trash2, Clock, Hash, Send, Bot, User, Info } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
+import Hint from '@/components/Hint';
 
 const AGENT_COLORS = {
   hermes: 'var(--color-hermes)',
@@ -78,6 +79,7 @@ function ChatInput({ onSend, disabled }: { onSend: (msg: string) => void; disabl
 
   return (
     <div className="flex items-end gap-2 px-4 pb-4">
+      <Hint tip="Schreibe eine Nachricht an den aktiven Agenten. Enter senden, Shift+Enter für neue Zeile. Die Antwort kommt über /api/agents/chat." />
       <textarea
         autoFocus
         rows={1}
@@ -324,6 +326,7 @@ export default function SessionsPanel() {
               >
                 New Session
               </button>
+              <div className="mt-2"><Hint tip="Startet eine neue Session mit einem Agenten deiner Wahl (Hermes, OpenClaw oder Claude)." /></div>
             </div>
           </div>
         )}

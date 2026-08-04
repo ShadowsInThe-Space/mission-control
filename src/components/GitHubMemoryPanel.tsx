@@ -21,6 +21,7 @@ import {
   AlertCircle,
   CheckCircle2,
 } from 'lucide-react';
+import Hint from '@/components/Hint';
 
 // `Github` isn't exported by all lucide-react majors. We render a simple
 // inline SVG so the UI doesn't depend on the icon set.
@@ -283,6 +284,7 @@ export default function GitHubMemoryPanel() {
             }}
             data-testid="memory-search"
           />
+          <Hint tip="Volltextsuche im mywiki Obsidian-Vault auf GitHub. Mindestens 2 Zeichen eingeben." />
         </div>
         {searchHits && (
           <div
@@ -376,7 +378,7 @@ export default function GitHubMemoryPanel() {
             <div className="flex-1 flex items-center justify-center p-8 text-center" style={{ color: 'var(--color-muted)' }}>
               <div>
                 <FileText size={32} className="mx-auto mb-2 opacity-50" />
-                <p className="text-sm">Select a file from the tree to read or edit.</p>
+                <p className="text-sm">Select a file from the tree to read or edit. <Hint tip="Dateien direkt bearbeiten und mit Commit-Nachricht nach GitHub pushen." /></p>
                 {treeFetchedAt && (
                   <p className="text-xs mt-2">
                     {tree.length} files indexed. Tree cached for 60s.

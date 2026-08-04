@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import { useStore } from '@/lib/store';
 import Sidebar from '@/components/Sidebar';
 import SessionsPanel from '@/components/SessionsPanel';
@@ -17,9 +18,15 @@ import PodcastStudio from '@/components/PodcastStudio';
 import VisionStudio from '@/components/VisionStudio';
 import BlogStudio from '@/components/BlogStudio';
 import MonitoringPanel from '@/components/MonitoringPanel';
+import HelpPanel from '@/components/HelpPanel';
 
 export default function Home() {
-  const { activeView } = useStore();
+  const { activeView, hintsEnabled } = useStore();
+
+  // Reflect the hints toggle on the body so CSS can react globally.
+  useEffect(() => {
+    document.body.classList.toggle('hint-active', hintsEnabled);
+  }, [hintsEnabled]);
 
   return (
     <div className="flex h-screen w-screen overflow-hidden" style={{ background: 'var(--background)' }}>
@@ -39,6 +46,7 @@ export default function Home() {
         {activeView === 'vision-studio' && <VisionStudio />}
         {activeView === 'blog-studio' && <BlogStudio />}
         {activeView === 'monitoring' && <MonitoringPanel />}
+        {activeView === 'help' && <HelpPanel />}
       </main>
       <AgentDetailPanel />
     </div>

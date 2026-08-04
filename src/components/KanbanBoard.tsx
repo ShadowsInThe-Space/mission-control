@@ -19,6 +19,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Plus, Trash2, GripVertical, AlertCircle, X } from 'lucide-react';
+import Hint from '@/components/Hint';
 
 const COLUMNS: { id: TaskStatus; label: string; color: string }[] = [
   { id: 'backlog', label: 'Backlog', color: 'var(--color-muted)' },
@@ -164,7 +165,7 @@ function TaskModal({ onClose }: { onClose: () => void }) {
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--color-muted)' }}>Priority</label>
+              <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--color-muted)' }}>Priority <Hint tip="Prioritäten: low/medium/high/critical. Tasks können Agenten zugewiesen werden." /></label>
               <div className="flex flex-col gap-1">
                 {PRIORITIES.map((p) => (
                   <label key={p} className="flex items-center gap-2 cursor-pointer">
@@ -233,7 +234,7 @@ function TaskModal({ onClose }: { onClose: () => void }) {
 }
 
 export default function KanbanBoard() {
-  const { tasks, moveTask, removeTask } = useStore();
+  const { tasks, moveTask, removeTask, clearTasks } = useStore();
   const [showModal, setShowModal] = useState(false);
 
   const sensors = useSensors(
@@ -258,16 +259,27 @@ export default function KanbanBoard() {
     <div className="flex-1 flex flex-col h-full overflow-hidden">
       <div className="flex items-center justify-between px-6 py-4 border-b" style={{ borderColor: 'var(--color-border)' }}>
         <div>
-          <h1 className="text-base font-semibold" style={{ color: 'var(--color-foreground)' }}>Kanban Board</h1>
+          <h1 className="text-base font-semibold" style={{ color: 'var(--color-foreground)' }}>Kanban Board <Hint tip="Tasks per Drag-and-Drop zwischen den Spalten verschieben. Neue Tasks im Backlog erstellen." /></h1>
           <p className="text-xs mt-0.5" style={{ color: 'var(--color-muted)' }}>{tasks.length} tasks across {COLUMNS.length} columns</p>
         </div>
-        <button
-          onClick={() => setShowModal(true)}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-opacity"
-          style={{ background: 'var(--color-accent)', color: '#fff' }}
-        >
-          <Plus size={14} /> Add Task
-        </button>
+        <div className="flex items-center gap-2">
+          {tasks.length > 0 && (
+            <button
+              onClick={() => { if (confirm('Alle Tasks vom Board löschen?')) clearTasks(); }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-opacity"
+              style={{ background: 'var(--color-surface-hover)', color: 'var(--color-muted)' }}
+            >
+              <Trash2 size={12} /> Clear
+            </button>
+          )}
+          <button
+            onClick={() => setShowModal(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-opacity"
+            style={{ background: 'var(--color-accent)', color: '#fff' }}
+          >
+            <Plus size={14} /> Add Task
+          </button>
+        </div>
       </div>
 
       <div className="flex-1 overflow-x-auto">

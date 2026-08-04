@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Cpu, RefreshCw, Terminal, Wifi, WifiOff, CircleDot } from 'lucide-react';
 import { listAgentDefinitions } from '@/lib/agent-registry';
 import { useStore } from '@/lib/store';
+import Hint from '@/components/Hint';
 
 interface AgentInfo {
   type: string;
@@ -76,7 +77,7 @@ export default function AgentsPanel() {
       <div className="flex items-center justify-between px-6 py-4 border-b" style={{ borderColor: 'var(--color-border)' }}>
         <div className="flex items-center gap-2">
           <Cpu size={16} style={{ color: 'var(--color-accent)' }} />
-          <h1 className="text-base font-semibold" style={{ color: 'var(--color-foreground)' }}>Agent Bridge</h1>
+          <h1 className="text-base font-semibold" style={{ color: 'var(--color-foreground)' }}>Agent Bridge <Hint tip="Probt alle registrierten Agenten live (CLI --version, HTTP health). Auto-Refresh alle 30 Sekunden." /></h1>
           <span className="text-xs" style={{ color: 'var(--color-muted)' }}>
             {lastRefresh ? `Updated ${lastRefresh.toLocaleTimeString()}` : 'Loading...'}
           </span>
@@ -141,7 +142,7 @@ export default function AgentsPanel() {
                   </div>
                 </div>
 
-                <p className="text-xs mb-4" style={{ color: 'var(--color-muted)' }}>{definition.description}</p>
+                <p className="text-xs mb-4" style={{ color: 'var(--color-muted)' }}>{definition.description} <Hint tip="Auf einen Agenten klicken für Details: Actions, HTTP-Endpoints und Chat." /></p>
 
                 {/* Info grid */}
                 {info?.info && (

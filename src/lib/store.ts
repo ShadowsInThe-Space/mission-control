@@ -125,10 +125,12 @@ export interface LogEntry {
 
 interface AppState {
   // UI
-  activeView: 'sessions' | 'kanban' | 'logs' | 'seo' | 'agents' | 'handoff' | 'memory' | 'image-studio' | 'video-studio' | 'music-studio' | 'podcast-studio' | 'vision-studio' | 'blog-studio' | 'monitoring';
+  activeView: 'sessions' | 'kanban' | 'logs' | 'seo' | 'agents' | 'handoff' | 'memory' | 'image-studio' | 'video-studio' | 'music-studio' | 'podcast-studio' | 'vision-studio' | 'blog-studio' | 'monitoring' | 'help';
   sidebarCollapsed: boolean;
+  hintsEnabled: boolean;
   setActiveView: (v: AppState['activeView']) => void;
   toggleSidebar: () => void;
+  toggleHints: () => void;
 
   // Agent detail (overlay panel)
   selectedAgentId: string | null;
@@ -150,6 +152,7 @@ interface AppState {
   updateTask: (id: string, updates: Partial<Task>) => void;
   removeTask: (id: string) => void;
   moveTask: (id: string, status: TaskStatus) => void;
+  clearTasks: () => void;
 
   // Logs
   logs: LogEntry[];
@@ -173,20 +176,40 @@ interface AppState {
   setProjectScore: (projectId: string, score: number) => void;
 }
 
-let taskCounter = 6;
+let taskCounter = 0;
 let sessionCounter = 3;
 let logCounter = 6;
 
-// Hydrate from localStorage on init
-const saved = isClient ? localStorage.getItem('mc-store-v2') : null;
+// Hydrate from localStorage on init (key must match the write key below)
+const STORAGE_KEY = 'mission-control-storage';
+const saved = isClient ? localStorage.getItem(STORAGE_KEY) : null;
 const savedState = saved ? JSON.parse(saved) : null;
+
+/**
+ * Heuristic: does this chat message look like an actionable task?
+ * Filters out greetings, questions, and short acknowledgements so only
+ * real instructions create Kanban cards.
+ */
+function looksLikeTask(message: string): boolean {
+  const msg = message.trim().toLowerCase();
+  if (msg.length < 8) return false; // too short to be a task
+  // Questions are not tasks
+  if (/^(was|wie|warum|wieso|wofür|welche|kannst du|kann ich|ist|sind|hast du|haben wir)/.test(msg)) return false;
+  // Greetings / acks
+  if (/^(hallo|hi|hey|danke|ok|super|genau|ja|nein|cool|👍)/.test(msg)) return false;
+  // Imperatives / task indicators (DE + EN)
+  const taskWords = /\b(erstell|erstelle|baue|bau|fix|fixe|reparier|implementier|füg|füge|mach|mache|schreib|schreibe|aktualisier|update|setze|setz|konfigurier|deploy|installier|entfern|lösch|prüfe|check|untersuch|analysier|optimier|refactor|test|add|remove|build|create|implement|setup|configure|install|deploy|fix|update)\b/;
+  return taskWords.test(msg);
+}
 
 export const useStore = create<AppState>((set) => ({
   // UI
   activeView: 'sessions',
   sidebarCollapsed: false,
+  hintsEnabled: false,
   setActiveView: (v) => set({ activeView: v }),
   toggleSidebar: () => set((s) => ({ sidebarCollapsed: !s.sidebarCollapsed })),
+  toggleHints: () => set((s) => ({ hintsEnabled: !s.hintsEnabled })),
 
   // Agent detail
   selectedAgentId: null,
@@ -282,6 +305,24 @@ export const useStore = create<AppState>((set) => ({
     if (!session) return;
     // Add user message
     useStore.getState().addMessage(sessionId, { role: 'user', content });
+
+    // Auto-create a Kanban task if the message looks like an actionable instruction.
+    // The task lands in Backlog, assigned to the session's agent.
+    if (looksLikeTask(content)) {
+      const title = content.length > 80 ? content.slice(0, 77) + '…' : content;
+      useStore.getState().addTask({
+        title,
+        description: `Aus Session „${session.title}” (${session.agentType}) automatisch erstellt.`,
+        status: 'backlog',
+        priority: 'medium',
+        assignee: session.agentType,
+      });
+      useStore.getState().addLog({
+        level: 'info',
+        source: 'system',
+        message: `Neuer Task aus Chat: „${title}” → Backlog`,
+      });
+    }
     // Simulate agent response via CLI bridge
     try {
       const res = await fetch('/api/agents/chat', {
@@ -301,68 +342,7 @@ export const useStore = create<AppState>((set) => ({
   },
 
   // Tasks
-  tasks: [
-    {
-      id: 't1',
-      title: 'Design sidebar navigation',
-      description: 'Persistent sidebar with session list and agent status indicators',
-      status: 'done',
-      priority: 'high',
-      assignee: 'hermes',
-      createdAt: Date.now() - 7200000,
-      updatedAt: Date.now() - 3600000,
-    },
-    {
-      id: 't2',
-      title: 'Build Kanban board',
-      description: 'Drag-and-drop task board with Hermes/OpenClaw/Claude columns',
-      status: 'in-progress',
-      priority: 'high',
-      assignee: 'hermes',
-      createdAt: Date.now() - 3600000,
-      updatedAt: Date.now() - 600000,
-    },
-    {
-      id: 't3',
-      title: 'Integrate Hermes CLI bridge',
-      description: 'Connect to Hermes Agent via CLI for command execution and status',
-      status: 'review',
-      priority: 'critical',
-      assignee: 'hermes',
-      createdAt: Date.now() - 1800000,
-      updatedAt: Date.now() - 300000,
-    },
-    {
-      id: 't4',
-      title: 'mywiki journal export',
-      description: 'Export daily logs and memories to /home/z3r0b1nary/workspace/mywiki/',
-      status: 'backlog',
-      priority: 'medium',
-      assignee: 'openclaw',
-      createdAt: Date.now() - 900000,
-      updatedAt: Date.now() - 900000,
-    },
-    {
-      id: 't5',
-      title: 'OpenClaw extension panel',
-      description: 'Show OpenClaw extension status and controls',
-      status: 'backlog',
-      priority: 'low',
-      assignee: 'openclaw',
-      createdAt: Date.now() - 900000,
-      updatedAt: Date.now() - 900000,
-    },
-    {
-      id: 't6',
-      title: 'Claude Code status widget',
-      description: 'Display Claude CLI session status and active branch',
-      status: 'backlog',
-      priority: 'medium',
-      assignee: 'claude',
-      createdAt: Date.now() - 900000,
-      updatedAt: Date.now() - 900000,
-    },
-  ],
+  tasks: savedState?.tasks ?? [],
   addTask: (t) =>
     set((st) => ({
       tasks: [
@@ -377,6 +357,7 @@ export const useStore = create<AppState>((set) => ({
       ),
     })),
   removeTask: (id) => set((st) => ({ tasks: st.tasks.filter((t) => t.id !== id) })),
+  clearTasks: () => { taskCounter = 0; set({ tasks: [] }); },
   moveTask: (id, status) =>
     set((st) => ({
       tasks: st.tasks.map((t) =>
@@ -576,7 +557,7 @@ export const useStore = create<AppState>((set) => ({
 if (isClient) {
   useStore.subscribe((state) => {
     localStorage.setItem(
-      'mission-control-storage',
+      STORAGE_KEY,
       JSON.stringify({
         sessions: state.sessions,
         tasks: state.tasks,

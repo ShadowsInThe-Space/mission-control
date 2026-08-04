@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { ArrowRightLeft, Play, RefreshCw, AlertCircle, CheckCircle2, ChevronDown, ChevronRight, FileText } from 'lucide-react';
+import Hint from '@/components/Hint';
 
 type HandoffPattern = 'research-to-build' | 'audit-to-report' | 'brief-to-spec' | 'custom';
 type ChatAgentId = 'claude' | 'gemini' | 'mmx' | 'codex' | 'ollama' | 'antigravity' | 'hermes';
@@ -108,7 +109,7 @@ export default function HandoffPanel() {
         <div className="flex items-center gap-2">
           <ArrowRightLeft size={16} style={{ color: 'var(--color-accent)' }} />
           <h1 className="text-base font-semibold" style={{ color: 'var(--color-foreground)' }}>
-            Cross-Agent Handoff
+            Cross-Agent Handoff <Hint tip="Wähle eine Chain-Pattern: research-to-build, audit-to-report, brief-to-spec oder custom." />
           </h1>
           <span className="text-xs" style={{ color: 'var(--color-muted)' }}>
             M7 v0 — Goldie Mission Stack pattern
@@ -126,7 +127,7 @@ export default function HandoffPanel() {
             </>
           ) : (
             <>
-              <Play size={14} /> Run Handoff
+              <Play size={14} /> Run Handoff <Hint tip="Startet den Handoff: schreibt den Task ins Vault und übergibt ihn an den Ziel-Agenten." />
             </>
           )}
         </button>

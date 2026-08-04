@@ -194,3 +194,11 @@ body {
   from { transform: translateY(100%); }
   to { transform: translateY(0); }
 }
+
+/* ─── Hints mode ─────────────────────────────────────────────────────────── */
+/* When hints are enabled, the Hint component renders ⓘ icons. This class
+   on the body allows optional global styling (e.g. subtle accent on
+   interactive elements) without touching each panel. */
+body.hint-active {
+  /* reserved for future hint-mode visual cues */
+}

@@ -23,17 +23,19 @@ import {
   X,
   MoreHorizontal,
   Activity,
+  Lightbulb,
+  HelpCircle,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
 type ViewId =
   | 'sessions' | 'kanban' | 'logs' | 'seo' | 'agents' | 'handoff' | 'memory'
-  | 'image-studio' | 'video-studio' | 'music-studio' | 'podcast-studio' | 'vision-studio' | 'blog-studio' | 'monitoring';
+  | 'image-studio' | 'video-studio' | 'music-studio' | 'podcast-studio' | 'vision-studio' | 'blog-studio' | 'monitoring' | 'help';
 
 // On mobile we show 4 main items in the bottom-nav and put the rest behind
 // the "More" sheet. The desktop sidebar still shows all 13.
 const MOBILE_PRIMARY_IDS: ViewId[] = ['sessions', 'kanban', 'agents', 'memory'];
-const MOBILE_MORE_IDS: ViewId[] = ['logs', 'seo', 'handoff', 'monitoring', 'image-studio', 'video-studio', 'music-studio', 'podcast-studio', 'vision-studio', 'blog-studio'];
+const MOBILE_MORE_IDS: ViewId[] = ['logs', 'seo', 'handoff', 'monitoring', 'help', 'image-studio', 'video-studio', 'music-studio', 'podcast-studio', 'vision-studio', 'blog-studio'];
 
 const NAV_ITEMS: Array<{ id: ViewId; icon: typeof MessageSquare; label: string }> = [
   { id: 'sessions', icon: MessageSquare, label: 'Sessions' },
@@ -44,6 +46,7 @@ const NAV_ITEMS: Array<{ id: ViewId; icon: typeof MessageSquare; label: string }
   { id: 'handoff', icon: ArrowRightLeft, label: 'Handoff' },
   { id: 'memory', icon: Brain, label: 'Memory' },
   { id: 'monitoring', icon: Activity, label: 'Monitor' },
+  { id: 'help', icon: HelpCircle, label: 'Help' },
   { id: 'image-studio', icon: Image, label: 'Image' },
   { id: 'video-studio', icon: Video, label: 'Video' },
   { id: 'music-studio', icon: Music, label: 'Music' },
@@ -53,7 +56,7 @@ const NAV_ITEMS: Array<{ id: ViewId; icon: typeof MessageSquare; label: string }
 ];
 
 export default function Sidebar() {
-  const { activeView, setActiveView, sidebarCollapsed, toggleSidebar, sessions, activeSessionId } = useStore();
+  const { activeView, setActiveView, sidebarCollapsed, toggleSidebar, hintsEnabled, toggleHints, sessions, activeSessionId } = useStore();
 
   const [isMobile, setIsMobile] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
@@ -265,6 +268,19 @@ export default function Sidebar() {
                     </button>
                   );
                 })}
+                {/* Hints toggle */}
+                <button
+                  onClick={toggleHints}
+                  className="flex items-center gap-3 w-full px-3 py-3 text-left transition-colors rounded-lg"
+                  style={{
+                    color: hintsEnabled ? 'var(--color-accent)' : 'var(--color-foreground)',
+                    minHeight: '44px',
+                  }}
+                  data-testid="mobile-more-hints"
+                >
+                  <Lightbulb size={18} />
+                  <span className="text-sm font-medium">Hints {hintsEnabled ? 'an' : 'aus'}</span>
+                </button>
               </div>
             </div>
           </>
@@ -341,6 +357,20 @@ export default function Sidebar() {
           })()}
         </div>
       )}
+
+      {/* Hints toggle */}
+      <button
+        onClick={toggleHints}
+        className="flex items-center gap-3 w-full px-3 py-2.5 text-left transition-colors rounded-lg mx-1"
+        style={{
+          color: hintsEnabled ? 'var(--color-accent)' : 'var(--color-muted)',
+          minHeight: '44px',
+        }}
+        title={sidebarCollapsed ? 'Hints' : undefined}
+      >
+        <Lightbulb size={18} />
+        {!sidebarCollapsed && <span className="text-sm font-medium">Hints</span>}
+      </button>
 
       {/* Collapse toggle */}
       <button

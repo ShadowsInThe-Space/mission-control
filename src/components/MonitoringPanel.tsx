@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Activity, ExternalLink, RefreshCw, Server, TriangleAlert } from 'lucide-react';
 import type { MonitoringSnapshot, MonitoringService } from '@/lib/monitoring-service';
+import Hint from '@/components/Hint';
 
 const GROUPS: Array<{ id: MonitoringService['category']; label: string; description: string }> = [
   { id: 'local', label: 'Arbeitsplatz', description: 'Lokale Hermes- und Mission-Control-Dienste' },
@@ -58,7 +59,7 @@ export default function MonitoringPanel() {
         <div className="flex items-center gap-2">
           <Activity size={18} style={{ color: 'var(--color-accent)' }} />
           <div>
-            <h1 className="text-base font-semibold" style={{ color: 'var(--color-foreground)' }}>System Monitor</h1>
+            <h1 className="text-base font-semibold" style={{ color: 'var(--color-foreground)' }}>System Monitor <Hint tip="Überwacht lokale Dienste und Mothership-Tunnel. Auto-Update alle 15 Sekunden." /></h1>
             <p className="text-xs" style={{ color: 'var(--color-muted)' }}>Auto-Update alle 15 Sekunden · {formatUpdated(snapshot?.generatedAt ?? null)}</p>
           </div>
         </div>

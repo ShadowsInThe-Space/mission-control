@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useStore, type AgentType } from '@/lib/store';
 import { formatDistanceToNow } from 'date-fns';
 import { ScrollText, Trash2, Download, AlertTriangle, Info, Bug, AlertCircle } from 'lucide-react';
+import Hint from '@/components/Hint';
 
 const LEVEL_COLORS = {
   info: 'var(--color-accent)',
@@ -81,6 +82,7 @@ export default function LogsPanel() {
             <option value="claude">Claude</option>
             <option value="system">System</option>
           </select>
+          <Hint tip="Filtere nach Log-Level (info/warn/error/debug) oder Quelle." />
           {/* Level filter */}
           <select
             value={levelFilter}
@@ -99,7 +101,7 @@ export default function LogsPanel() {
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-opacity"
             style={{ background: 'var(--color-accent)', color: '#fff' }}
           >
-            <Download size={12} /> Export to Obsidian
+            <Download size={12} /> Export to Obsidian <Hint tip="Exportiert die gefilterten Logs als Journal-Eintrag in den Obsidian-Vault (YYYY-MM-DD.md)." />
           </button>
           <button
             onClick={clearLogs}
