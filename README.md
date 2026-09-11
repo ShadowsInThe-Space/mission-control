@@ -1,6 +1,10 @@
 # Mission Control
 
+> **English TL;DR:** Local dark-themed web dashboard for orchestrating AI coding agents (Hermes, OpenClaw, Claude Code) — live agent status via a CLI bridge, session management, drag-and-drop kanban board, and one-click log export to Obsidian. Built with Next.js 16, React 19, TypeScript, Zustand and @dnd-kit.
+
 **AI Agent Mission Control Dashboard** — eine lokale, dark-themed Web-Oberfläche zur Verwaltung von KI-Agenten (Hermes Agent, OpenClaw, Claude Code) mit Sessions, Kanban-Taskboard und Obsidian-Log-Export.
+
+![Mission Control Dashboard](docs/screenshot-dashboard.png)
 
 ---
 
