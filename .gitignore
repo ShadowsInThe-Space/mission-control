@@ -39,3 +39,6 @@ next-env.d.ts
 
 # Misc
 *.log
+
+# Local agent keys & scripts — never commit
+scripts/
